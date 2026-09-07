@@ -78,7 +78,7 @@ def dashboard():
         return redirect("/student")
 
     if role == "teacher":
-        return "Teacher Dashboard"
+    return redirect("/teacher")
 
     if role == "developer":
         return redirect("/admin")
@@ -111,6 +111,30 @@ def admin():
 
     <h2>📊 Test Records</h2>
     <p>Test record management will be added next.</p>
+
+    <br>
+    <a href="/logout">Logout</a>
+    """
+@app.route("/teacher")
+def teacher():
+    if "user_id" not in session:
+        return redirect("/")
+
+    if session.get("role") != "teacher":
+        return "Access Denied", 403
+
+    return """
+    <h1>👨‍🏫 Teacher Dashboard</h1>
+
+    <p>Welcome, Teacher!</p>
+
+    <hr>
+
+    <h2>👨‍🎓 Students</h2>
+    <p>Student management will be added next.</p>
+
+    <h2>📊 Test Marks</h2>
+    <p>Add / Edit / Delete marks will be added next.</p>
 
     <br>
     <a href="/logout">Logout</a>

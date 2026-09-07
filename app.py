@@ -75,7 +75,7 @@ def dashboard():
     role = session.get("role")
 
     if role == "student":
-        return "Student Dashboard"
+    return redirect("/student")
 
     if role == "teacher":
         return "Teacher Dashboard"

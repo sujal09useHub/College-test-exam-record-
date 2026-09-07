@@ -226,81 +226,245 @@ def teacher():
     if session.get("role") != "teacher":
         return "Access Denied", 403
 
-    return """
-    <h1>👨‍🏫 Teacher Dashboard</h1>
-
-    <p>Welcome, Teacher!</p>
-
-    <hr>
-
-    <h2>👨‍🎓 Students</h2>
-    <p>Student management will be added next.</p>
-
-    <h2>📊 Test Marks</h2>
-    <p>Add / Edit / Delete marks will be added next.</p>
-
-    <br>
-    <a href="/logout">Logout</a>
-    """
-@app.route("/student")
-def student():
-    if "user_id" not in session:
-        return redirect("/")
-
-    if session.get("role") != "student":
-        return "Access Denied", 403
-
-    r = requests.get(
-        SUPABASE_URL + "/rest/v1/test_records",
+    # Get students
+    students_response = requests.get(
+        SUPABASE_URL + "/rest/v1/users",
         headers=db_headers(),
         params={
-            "student_id": "eq." + str(session["user_id"]),
-            "select": "id,subject_id,test_name,marks,total_marks,test_date",
-            "order": "test_date.desc"
+            "role": "eq.student",
+            "select": "id,name,email",
+            "order": "name.asc"
         },
         timeout=10
     )
 
-    if r.status_code != 200:
-        return "Database Error", 500
+    if students_response.status_code != 200:
+        return "Database Error: " + students_response.text, 500
 
-    records = r.json()
+    students = students_response.json()
 
-    rows = ""
+    # Get subjects
+    subjects_response = requests.get(
+        SUPABASE_URL + "/rest/v1/subjects",
+        headers=db_headers(),
+        params={
+            "select": "id,name",
+            "order": "name.asc"
+        },
+        timeout=10
+    )
 
-    for x in records:
-        rows += f"""
-        <tr>
-            <td>{x["test_name"]}</td>
-            <td>{x["marks"]}/{x["total_marks"]}</td>
-            <td>{x["test_date"] or ""}</td>
-        </tr>
+    if subjects_response.status_code != 200:
+        return "Database Error: " + subjects_response.text, 500
+
+    subjects = subjects_response.json()
+
+    student_options = ""
+
+    for student in students:
+        student_options += f"""
+        <option value="{student["id"]}">
+            {student["name"]} - {student["email"]}
+        </option>
         """
 
-    if not rows:
-        rows = """
-        <tr>
-            <td colspan="3">No test records yet.</td>
-        </tr>
+    subject_options = ""
+
+    for subject in subjects:
+        subject_options += f"""
+        <option value="{subject["id"]}">
+            {subject["name"]}
+        </option>
         """
 
     return f"""
-    <h1>🎓 Student Dashboard</h1>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Teacher Dashboard</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <p>Welcome, {session["name"]}</p>
+        <style>
+            body {{
+                font-family: Arial;
+                background: #f2f5f9;
+                padding: 20px;
+            }}
 
-    <table border="1" cellpadding="10">
-        <tr>
-            <th>Test</th>
-            <th>Marks</th>
-            <th>Date</th>
-        </tr>
-        {rows}
-    </table>
+            .box {{
+                max-width: 600px;
+                margin: auto;
+                background: white;
+                padding: 25px;
+                border-radius: 15px;
+            }}
 
-    <br>
-    <a href="/logout">Logout</a>
+            input, select, button {{
+                width: 100%;
+                padding: 12px;
+                margin-top: 10px;
+                box-sizing: border-box;
+            }}
+
+            button {{
+                background: #2563eb;
+                color: white;
+                border: 0;
+                border-radius: 8px;
+                font-size: 16px;
+            }}
+        </style>
+    </head>
+
+    <body>
+
+    <div class="box">
+
+        <h1>👨‍🏫 Teacher Dashboard</h1>
+
+        <p>Welcome, {session["name"]}</p>
+
+        <hr>
+
+        <h2>➕ Add Test Marks</h2>
+
+        <form method="POST" action="/teacher/add-record">
+
+            <label>🎓 Select Student</label>
+
+            <select name="student_id" required>
+                <option value="">Select Student</option>
+                {student_options}
+            </select>
+
+            <label>📚 Select Subject</label>
+
+            <select name="subject_id" required>
+                <option value="">Select Subject</option>
+                {subject_options}
+            </select>
+
+            <label>📝 Test Name</label>
+
+            <input
+                type="text"
+                name="test_name"
+                placeholder="Example: Unit Test 1"
+                required
+            >
+
+            <label>📊 Marks</label>
+
+            <input
+                type="number"
+                name="marks"
+                min="0"
+                step="0.01"
+                placeholder="Obtained Marks"
+                required
+            >
+
+            <label>📋 Total Marks</label>
+
+            <input
+                type="number"
+                name="total_marks"
+                min="1"
+                step="0.01"
+                placeholder="Example: 50"
+                required
+            >
+
+            <label>📅 Test Date</label>
+
+            <input
+                type="date"
+                name="test_date"
+                required
+            >
+
+            <button type="submit">
+                ➕ Add Test Record
+            </button>
+
+        </form>
+
+        <hr>
+
+        <a href="/logout">🚪 Logout</a>
+
+    </div>
+
+    </body>
+    </html>
     """
+@app.route("/teacher/add-record", methods=["POST"])
+def teacher_add_record():
+    if "user_id" not in session:
+        return redirect("/")
+
+    if session.get("role") != "teacher":
+        return "Access Denied", 403
+
+    student_id = request.form.get("student_id", "")
+    subject_id = request.form.get("subject_id", "")
+    test_name = request.form.get("test_name", "").strip()
+    marks = request.form.get("marks", "")
+    total_marks = request.form.get("total_marks", "")
+    test_date = request.form.get("test_date", "")
+
+    if not all([
+        student_id,
+        subject_id,
+        test_name,
+        marks,
+        total_marks,
+        test_date
+    ]):
+        return "All fields are required", 400
+
+    try:
+        marks_value = float(marks)
+        total_marks_value = float(total_marks)
+    except ValueError:
+        return "Marks must be numbers", 400
+
+    if marks_value < 0:
+        return "Marks cannot be negative", 400
+
+    if total_marks_value <= 0:
+        return "Total marks must be greater than 0", 400
+
+    if marks_value > total_marks_value:
+        return "Marks cannot be greater than total marks", 400
+
+    data = {
+        "student_id": student_id,
+        "subject_id": subject_id,
+        "test_name": test_name,
+        "marks": marks_value,
+        "total_marks": total_marks_value,
+        "test_date": test_date
+    }
+
+    r = requests.post(
+        SUPABASE_URL + "/rest/v1/test_records",
+        headers=db_headers(),
+        json=data,
+        timeout=10
+    )
+
+    if r.status_code not in [200, 201]:
+        return "Could not add test record: " + r.text, 400
+
+    return """
+    <h2>✅ Test record added successfully!</h2>
+
+    <a href="/teacher">
+        ← Back to Teacher Dashboard
+    </a>
+    """
+
 @app.route("/")
 def home():
     if "user_id" in session:

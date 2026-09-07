@@ -78,7 +78,7 @@ def dashboard():
         return redirect("/student")
 
     if role == "teacher":
-    return redirect("/teacher")
+        return redirect("/teacher")
 
     if role == "developer":
         return redirect("/admin")

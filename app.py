@@ -96,7 +96,7 @@ def admin():
     if session.get("role") != "developer":
         return "Access Denied", 403
 
-    return """
+     return """
     <h1>👨‍💻 Developer Dashboard</h1>
 
     <p>Welcome, Developer!</p>
@@ -104,15 +104,24 @@ def admin():
     <hr>
 
     <h2>👥 User Management</h2>
-    <p>Student / Teacher management will be added next.</p>
 
-    <h2>📚 Subject Management</h2>
-    <p>Subject management will be added next.</p>
+    <form method="POST" action="/admin/add-user">
+        <input name="name" placeholder="Name" required><br><br>
+        <input name="email" type="email" placeholder="Email" required><br><br>
+        <input name="password" type="password"
+               placeholder="Password" required><br><br>
 
-    <h2>📊 Test Records</h2>
-    <p>Test record management will be added next.</p>
+        <select name="role" required>
+            <option value="student">🎓 Student</option>
+            <option value="teacher">👨‍🏫 Teacher</option>
+        </select>
 
-    <br>
+        <br><br>
+        <button type="submit">➕ Add User</button>
+    </form>
+
+    <hr>
+
     <a href="/logout">Logout</a>
     """
 @app.route("/teacher")

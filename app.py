@@ -259,6 +259,23 @@ def teacher():
 
     subjects = subjects_response.json()
 
+    # Get all test records
+    records_response = requests.get(
+        SUPABASE_URL + "/rest/v1/test_records",
+        headers=db_headers(),
+        params={
+            "select": "id,student_id,subject_id,test_name,marks,total_marks,test_date",
+            "order": "test_date.desc"
+        },
+        timeout=10
+    )
+
+    if records_response.status_code != 200:
+        return "Database Error: " + records_response.text, 500
+
+    records = records_response.json()
+
+    # Student dropdown
     student_options = ""
 
     for student in students:
@@ -268,6 +285,7 @@ def teacher():
         </option>
         """
 
+    # Subject dropdown
     subject_options = ""
 
     for subject in subjects:
@@ -277,32 +295,99 @@ def teacher():
         </option>
         """
 
+    # Create lookup dictionaries
+    student_names = {
+        str(student["id"]): student["name"]
+        for student in students
+    }
+
+    subject_names = {
+        str(subject["id"]): subject["name"]
+        for subject in subjects
+    }
+
+    # Records table
+    rows = ""
+
+    for record in records:
+        student_name = student_names.get(
+            str(record["student_id"]),
+            "Unknown Student"
+        )
+
+        subject_name = subject_names.get(
+            str(record["subject_id"]),
+            "Unknown Subject"
+        )
+
+        rows += f"""
+        <tr>
+            <td>{student_name}</td>
+            <td>{subject_name}</td>
+            <td>{record["test_name"]}</td>
+            <td>{record["marks"]}/{record["total_marks"]}</td>
+            <td>{record["test_date"]}</td>
+
+            <td>
+                <a href="/teacher/edit-record/{record["id"]}">
+                    ✏️ Edit
+                </a>
+
+                <form method="POST"
+                      action="/teacher/delete-record/{record["id"]}"
+                      style="display:inline;"
+                      onsubmit="return confirm('Delete this test record?');">
+
+                    <button type="submit">
+                        🗑️ Delete
+                    </button>
+
+                </form>
+            </td>
+        </tr>
+        """
+
+    if not rows:
+        rows = """
+        <tr>
+            <td colspan="6">
+                No test records yet.
+            </td>
+        </tr>
+        """
+
     return f"""
     <!DOCTYPE html>
     <html>
+
     <head>
+
         <title>Teacher Dashboard</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <meta name="viewport"
+              content="width=device-width, initial-scale=1">
 
         <style>
+
             body {{
                 font-family: Arial;
                 background: #f2f5f9;
-                padding: 20px;
+                padding: 15px;
             }}
 
             .box {{
-                max-width: 600px;
+                max-width: 1100px;
                 margin: auto;
                 background: white;
-                padding: 25px;
+                padding: 20px;
                 border-radius: 15px;
             }}
 
             input, select, button {{
                 width: 100%;
                 padding: 12px;
-                margin-top: 10px;
+                margin-top: 8px;
+                margin-bottom: 12px;
                 box-sizing: border-box;
             }}
 
@@ -311,9 +396,42 @@ def teacher():
                 color: white;
                 border: 0;
                 border-radius: 8px;
-                font-size: 16px;
             }}
+
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 15px;
+            }}
+
+            th, td {{
+                border: 1px solid #ccc;
+                padding: 10px;
+                text-align: left;
+            }}
+
+            th {{
+                background: #f1f5f9;
+            }}
+
+            .delete-btn {{
+                background: #dc2626;
+                width: auto;
+                padding: 7px 10px;
+                margin: 5px;
+            }}
+
+            .edit-link {{
+                display: inline-block;
+                background: #16a34a;
+                color: white;
+                padding: 7px 10px;
+                border-radius: 6px;
+                text-decoration: none;
+            }}
+
         </style>
+
     </head>
 
     <body>
@@ -322,26 +440,39 @@ def teacher():
 
         <h1>👨‍🏫 Teacher Dashboard</h1>
 
-        <p>Welcome, {session["name"]}</p>
+        <p>
+            Welcome, {session["name"]}
+        </p>
 
         <hr>
 
         <h2>➕ Add Test Marks</h2>
 
-        <form method="POST" action="/teacher/add-record">
+        <form method="POST"
+              action="/teacher/add-record">
 
-            <label>🎓 Select Student</label>
+            <label>🎓 Student</label>
 
             <select name="student_id" required>
-                <option value="">Select Student</option>
+
+                <option value="">
+                    Select Student
+                </option>
+
                 {student_options}
+
             </select>
 
-            <label>📚 Select Subject</label>
+            <label>📚 Subject</label>
 
             <select name="subject_id" required>
-                <option value="">Select Subject</option>
+
+                <option value="">
+                    Select Subject
+                </option>
+
                 {subject_options}
+
             </select>
 
             <label>📝 Test Name</label>
@@ -360,7 +491,6 @@ def teacher():
                 name="marks"
                 min="0"
                 step="0.01"
-                placeholder="Obtained Marks"
                 required
             >
 
@@ -371,7 +501,6 @@ def teacher():
                 name="total_marks"
                 min="1"
                 step="0.01"
-                placeholder="Example: 50"
                 required
             >
 
@@ -391,13 +520,36 @@ def teacher():
 
         <hr>
 
-        <a href="/logout">🚪 Logout</a>
+        <h2>📊 All Student Test Records</h2>
+
+        <table>
+
+            <tr>
+                <th>Student</th>
+                <th>Subject</th>
+                <th>Test</th>
+                <th>Marks</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+
+            {rows}
+
+        </table>
+
+        <br>
+
+        <a href="/logout">
+            🚪 Logout
+        </a>
 
     </div>
 
     </body>
+
     </html>
     """
+
 @app.route("/teacher/add-record", methods=["POST"])
 def teacher_add_record():
     if "user_id" not in session:
@@ -464,6 +616,194 @@ def teacher_add_record():
         ← Back to Teacher Dashboard
     </a>
     """
+@app.route("/teacher/edit-record/<int:record_id>", methods=["GET", "POST"])
+def teacher_edit_record(record_id):
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    if session.get("role") != "teacher":
+        return "Access Denied", 403
+
+    if request.method == "POST":
+
+        test_name = request.form.get("test_name", "").strip()
+        marks = request.form.get("marks", "")
+        total_marks = request.form.get("total_marks", "")
+        test_date = request.form.get("test_date", "")
+
+        if not all([
+            test_name,
+            marks,
+            total_marks,
+            test_date
+        ]):
+            return "All fields are required", 400
+
+        try:
+            marks_value = float(marks)
+            total_marks_value = float(total_marks)
+        except ValueError:
+            return "Marks must be numbers", 400
+
+        if marks_value < 0:
+            return "Marks cannot be negative", 400
+
+        if total_marks_value <= 0:
+            return "Total marks must be greater than 0", 400
+
+        if marks_value > total_marks_value:
+            return "Marks cannot be greater than total marks", 400
+
+        data = {
+            "test_name": test_name,
+            "marks": marks_value,
+            "total_marks": total_marks_value,
+            "test_date": test_date
+        }
+
+        r = requests.patch(
+            SUPABASE_URL + "/rest/v1/test_records",
+            headers=db_headers(),
+            params={
+                "id": "eq." + str(record_id)
+            },
+            json=data,
+            timeout=10
+        )
+
+        if r.status_code not in [200, 204]:
+            return "Could not update record: " + r.text, 400
+
+        return redirect("/teacher")
+
+    # Get record
+    r = requests.get(
+        SUPABASE_URL + "/rest/v1/test_records",
+        headers=db_headers(),
+        params={
+            "id": "eq." + str(record_id),
+            "select": "id,test_name,marks,total_marks,test_date",
+            "limit": 1
+        },
+        timeout=10
+    )
+
+    if r.status_code != 200:
+        return "Database Error: " + r.text, 500
+
+    records = r.json()
+
+    if not records:
+        return "Record not found", 404
+
+    record = records[0]
+
+    return f"""
+    <!DOCTYPE html>
+    <html>
+
+    <head>
+
+        <title>Edit Test Record</title>
+
+        <meta name="viewport"
+              content="width=device-width, initial-scale=1">
+
+    </head>
+
+    <body>
+
+        <h1>✏️ Edit Test Record</h1>
+
+        <form method="POST">
+
+            <label>Test Name</label><br>
+
+            <input
+                type="text"
+                name="test_name"
+                value="{record["test_name"]}"
+                required
+            >
+
+            <br><br>
+
+            <label>Marks</label><br>
+
+            <input
+                type="number"
+                name="marks"
+                value="{record["marks"]}"
+                min="0"
+                step="0.01"
+                required
+            >
+
+            <br><br>
+
+            <label>Total Marks</label><br>
+
+            <input
+                type="number"
+                name="total_marks"
+                value="{record["total_marks"]}"
+                min="1"
+                step="0.01"
+                required
+            >
+
+            <br><br>
+
+            <label>Date</label><br>
+
+            <input
+                type="date"
+                name="test_date"
+                value="{record["test_date"]}"
+                required
+            >
+
+            <br><br>
+
+            <button type="submit">
+                💾 Save Changes
+            </button>
+
+        </form>
+
+        <br>
+
+        <a href="/teacher">
+            ← Back to Teacher Dashboard
+        </a>
+
+    </body>
+
+    </html>
+    """
+@app.route("/teacher/delete-record/<int:record_id>", methods=["POST"])
+def teacher_delete_record(record_id):
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    if session.get("role") != "teacher":
+        return "Access Denied", 403
+
+    r = requests.delete(
+        SUPABASE_URL + "/rest/v1/test_records",
+        headers=db_headers(),
+        params={
+            "id": "eq." + str(record_id)
+        },
+        timeout=10
+    )
+
+    if r.status_code not in [200, 204]:
+        return "Could not delete record: " + r.text, 400
+
+    return redirect("/teacher")
 
 @app.route("/")
 def home():

@@ -96,7 +96,7 @@ def admin():
     if session.get("role") != "developer":
         return "Access Denied", 403
 
-     r = requests.get(
+    r = requests.get(
         SUPABASE_URL + "/rest/v1/users",
         headers=db_headers(),
         params={

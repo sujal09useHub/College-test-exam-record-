@@ -593,10 +593,10 @@ def teacher_add_record():
         return "All fields are required", 400
 
     try:
-    marks_value = int(marks)
-    total_marks_value = int(total_marks)
-except ValueError:
-    return "Marks must be whole numbers", 400
+        marks_value = int(marks)
+        total_marks_value = int(total_marks)
+    except ValueError:
+        return "Marks must be whole numbers", 400
 
     if marks_value < 0:
         return "Marks cannot be negative", 400
@@ -658,10 +658,10 @@ def teacher_edit_record(record_id):
             return "All fields are required", 400
 
         try:
-    marks_value = int(marks)
-    total_marks_value = int(total_marks)
-except ValueError:
-    return "Marks must be whole numbers", 400
+           marks_value = int(marks)
+           total_marks_value = int(total_marks)
+        except ValueError:
+           return "Marks must be whole numbers", 400
 
         if marks_value < 0:
             return "Marks cannot be negative", 400

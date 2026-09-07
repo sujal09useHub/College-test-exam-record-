@@ -81,7 +81,7 @@ def dashboard():
         return "Teacher Dashboard"
 
     if role == "developer":
-        return "Developer Dashboard"
+        return redirect("/admin")
 
     return "Invalid role", 403
 @app.route("/logout")

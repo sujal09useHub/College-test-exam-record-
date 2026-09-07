@@ -1,4 +1,5 @@
 from flask import Flask, request, session, redirect
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import requests
 app = Flask(__name__)

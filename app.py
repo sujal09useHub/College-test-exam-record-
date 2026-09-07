@@ -127,6 +127,56 @@ def admin():
         return "Database Error: " + r.text, 500
 
     users = r.json()
+    
+        # Get subjects
+    subjects_response = requests.get(
+        SUPABASE_URL + "/rest/v1/subjects",
+        headers=db_headers(),
+        params={
+            "select": "id,name",
+            "order": "name.asc"
+        },
+        timeout=10
+    )
+
+    if subjects_response.status_code != 200:
+        return "Database Error: " + subjects_response.text, 500
+
+    subjects = subjects_response.json()
+
+    subject_rows = ""
+
+    for subject in subjects:
+        subject_rows += f"""
+        <tr>
+            <td>{subject["name"]}</td>
+
+            <td>
+                <a href="/admin/edit-subject/{subject["id"]}">
+                    ✏️ Edit
+                </a>
+
+                <form method="POST"
+                      action="/admin/delete-subject/{subject["id"]}"
+                      style="display:inline;"
+                      onsubmit="return confirm('Delete this subject?');">
+
+                    <button type="submit"
+                            style="background:#dc2626;color:white;border:0;padding:7px 10px;border-radius:6px;">
+                        🗑️ Delete
+                    </button>
+
+                </form>
+            </td>
+        </tr>
+        """
+
+    if not subject_rows:
+        subject_rows = """
+        <tr>
+            <td colspan="2">No subjects found.</td>
+        </tr>
+        """
 
     rows = ""
 
@@ -202,7 +252,37 @@ def admin():
 
         {rows}
     </table>
+    <hr>
 
+<h2>📚 Manage Subjects</h2>
+
+<form method="POST" action="/admin/add-subject">
+
+    <input
+        type="text"
+        name="name"
+        placeholder="Enter Subject Name"
+        required
+    >
+
+    <button type="submit">
+        ➕ Add Subject
+    </button>
+
+</form>
+
+<br>
+
+<table border="1" cellpadding="10">
+
+    <tr>
+        <th>Subject</th>
+        <th>Action</th>
+    </tr>
+
+    {subject_rows}
+
+</table>
     <br>
 
     <a href="/logout">Logout</a>
@@ -235,6 +315,216 @@ def admin_add_user():
     <h2>✅ User created successfully!</h2>
     <a href="/admin">← Back to Admin Dashboard</a>
     """
+@app.route("/admin/add-subject", methods=["POST"])
+def admin_add_subject():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    if session.get("role") != "developer":
+        return "Access Denied", 403
+
+    name = request.form.get("name", "").strip()
+
+    if not name:
+        return "Subject name is required", 400
+
+    # Check duplicate subject
+    check = requests.get(
+        SUPABASE_URL + "/rest/v1/subjects",
+        headers=db_headers(),
+        params={
+            "name": "eq." + name,
+            "select": "id",
+            "limit": 1
+        },
+        timeout=10
+    )
+
+    if check.status_code != 200:
+        return "Database Error: " + check.text, 500
+
+    if check.json():
+        return """
+        <h2>⚠️ Subject already exists!</h2>
+        <a href="/admin">← Back to Admin</a>
+        """
+
+    data = {
+        "name": name
+    }
+
+    r = requests.post(
+        SUPABASE_URL + "/rest/v1/subjects",
+        headers=db_headers(),
+        json=data,
+        timeout=10
+    )
+
+    if r.status_code not in [200, 201]:
+        return "Could not add subject: " + r.text, 400
+
+    return redirect("/admin")
+@app.route("/admin/edit-subject/<int:subject_id>", methods=["GET", "POST"])
+def admin_edit_subject(subject_id):
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    if session.get("role") != "developer":
+        return "Access Denied", 403
+
+    if request.method == "POST":
+
+        name = request.form.get("name", "").strip()
+
+        if not name:
+            return "Subject name is required", 400
+
+        data = {
+            "name": name
+        }
+
+        r = requests.patch(
+            SUPABASE_URL + "/rest/v1/subjects",
+            headers=db_headers(),
+            params={
+                "id": "eq." + str(subject_id)
+            },
+            json=data,
+            timeout=10
+        )
+
+        if r.status_code not in [200, 204]:
+            return "Could not update subject: " + r.text, 400
+
+        return redirect("/admin")
+
+    # Get subject
+    r = requests.get(
+        SUPABASE_URL + "/rest/v1/subjects",
+        headers=db_headers(),
+        params={
+            "id": "eq." + str(subject_id),
+            "select": "id,name",
+            "limit": 1
+        },
+        timeout=10
+    )
+
+    if r.status_code != 200:
+        return "Database Error: " + r.text, 500
+
+    subjects = r.json()
+
+    if not subjects:
+        return "Subject not found", 404
+
+    subject = subjects[0]
+
+    return f"""
+    <!DOCTYPE html>
+    <html>
+
+    <head>
+
+        <title>Edit Subject</title>
+
+        <meta name="viewport"
+              content="width=device-width, initial-scale=1">
+
+        <style>
+
+            body {{
+                font-family: Arial;
+                background: #f2f5f9;
+                padding: 20px;
+            }}
+
+            .box {{
+                max-width: 450px;
+                margin: 50px auto;
+                background: white;
+                padding: 25px;
+                border-radius: 15px;
+            }}
+
+            input, button {{
+                width: 100%;
+                padding: 12px;
+                margin-top: 10px;
+                box-sizing: border-box;
+            }}
+
+            button {{
+                background: #2563eb;
+                color: white;
+                border: 0;
+                border-radius: 8px;
+            }}
+
+        </style>
+
+    </head>
+
+    <body>
+
+    <div class="box">
+
+        <h1>✏️ Edit Subject</h1>
+
+        <form method="POST">
+
+            <label>📚 Subject Name</label>
+
+            <input
+                type="text"
+                name="name"
+                value="{subject["name"]}"
+                required
+            >
+
+            <button type="submit">
+                💾 Save Changes
+            </button>
+
+        </form>
+
+        <br>
+
+        <a href="/admin">
+            ← Back to Admin Dashboard
+        </a>
+
+    </div>
+
+    </body>
+
+    </html>
+    """
+@app.route("/admin/delete-subject/<int:subject_id>", methods=["POST"])
+def admin_delete_subject(subject_id):
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    if session.get("role") != "developer":
+        return "Access Denied", 403
+
+    r = requests.delete(
+        SUPABASE_URL + "/rest/v1/subjects",
+        headers=db_headers(),
+        params={
+            "id": "eq." + str(subject_id)
+        },
+        timeout=10
+    )
+
+    if r.status_code not in [200, 204]:
+        return "Could not delete subject: " + r.text, 400
+
+    return redirect("/admin")
+
 @app.route("/admin/delete-user", methods=["POST"])
 def admin_delete_user():
 

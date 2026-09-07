@@ -67,6 +67,23 @@ def login():
     session["role"] = user["role"]
 
     return redirect("/dashboard")
+@app.route("/dashboard")
+def dashboard():
+    if "user_id" not in session:
+        return redirect("/")
+
+    role = session.get("role")
+
+    if role == "student":
+        return "Student Dashboard"
+
+    if role == "teacher":
+        return "Teacher Dashboard"
+
+    if role == "developer":
+        return "Developer Dashboard"
+
+    return "Invalid role", 403
 @app.route("/")
 def home():
     return """

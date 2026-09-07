@@ -124,6 +124,34 @@ def admin():
 
     <a href="/logout">Logout</a>
     """
+@app.route("/admin/add-user", methods=["POST"])
+def admin_add_user():
+    if "user_id" not in session:
+        return redirect("/")
+
+    if session.get("role") != "developer":
+        return "Access Denied", 403
+
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "")
+    role = request.form.get("role", "")
+
+    if not name or not email or not password:
+        return "All fields are required", 400
+
+    if role not in ["student", "teacher"]:
+        return "Invalid role", 400
+
+    r = create_user(name, email, password, role)
+
+    if r.status_code not in [200, 201]:
+        return "Could not create user: " + r.text, 400
+
+    return """
+    <h2>✅ User created successfully!</h2>
+    <a href="/admin">← Back to Admin Dashboard</a>
+    """
 @app.route("/teacher")
 def teacher():
     if "user_id" not in session:

@@ -84,6 +84,10 @@ def dashboard():
         return "Developer Dashboard"
 
     return "Invalid role", 403
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
 @app.route("/")
 def home():
     if "user_id" in session:

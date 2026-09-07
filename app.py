@@ -18,6 +18,20 @@ def db_headers():
         "Authorization": "Bearer " + SUPABASE_KEY,
         "Content-Type": "application/json"
     }
+def create_user(name, email, password, role):
+    data = {
+        "name": name,
+        "email": email,
+        "password_hash": generate_password_hash(password),
+        "role": role
+    }
+
+    return requests.post(
+        SUPABASE_URL + "/rest/v1/users",
+        headers=db_headers(),
+        json=data,
+        timeout=10
+    )
 @app.route("/")
 def home():
     return """

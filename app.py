@@ -34,17 +34,17 @@ def create_user(name, email, password, role):
     )
 @app.route("/setup-developer")
 def setup_developer():
-    data = {
-        "name": "Developer",
-        "email": "admin@gmail.com",
-        "password_hash": generate_password_hash("admin123"),
-        "role": "developer"
-    }
+    password_hash = generate_password_hash("admin123")
 
-    r = requests.post(
+    r = requests.patch(
         SUPABASE_URL + "/rest/v1/users",
-        headers={**db_headers(), "Prefer": "return=representation"},
-        json=data,
+        headers=db_headers(),
+        params={"email": "eq.admin@gmail.com"},
+        json={
+            "name": "Developer",
+            "password_hash": password_hash,
+            "role": "developer"
+        },
         timeout=10
     )
 

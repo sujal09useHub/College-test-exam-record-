@@ -88,6 +88,33 @@ def dashboard():
 def logout():
     session.clear()
     return redirect("/")
+@app.route("/admin")
+def admin():
+    if "user_id" not in session:
+        return redirect("/")
+
+    if session.get("role") != "developer":
+        return "Access Denied", 403
+
+    return """
+    <h1>👨‍💻 Developer Dashboard</h1>
+
+    <p>Welcome, Developer!</p>
+
+    <hr>
+
+    <h2>👥 User Management</h2>
+    <p>Student / Teacher management will be added next.</p>
+
+    <h2>📚 Subject Management</h2>
+    <p>Subject management will be added next.</p>
+
+    <h2>📊 Test Records</h2>
+    <p>Test record management will be added next.</p>
+
+    <br>
+    <a href="/logout">Logout</a>
+    """
 @app.route("/")
 def home():
     if "user_id" in session:

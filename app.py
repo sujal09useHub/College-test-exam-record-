@@ -1,7 +1,22 @@
-from flask import Flask
-
+from flask import Flask, request, session, redirect
+import os
+import requests
 app = Flask(__name__)
+app.secret_key = os.environ.get(
+    "FLASK_SECRET_KEY",
+    "change-this-later"
+)
 
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+
+
+def db_headers():
+    return {
+        "apikey": SUPABASE_KEY,
+        "Authorization": "Bearer " + SUPABASE_KEY,
+        "Content-Type": "application/json"
+    }
 @app.route("/")
 def home():
     return """

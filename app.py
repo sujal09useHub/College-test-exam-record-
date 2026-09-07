@@ -32,6 +32,23 @@ def create_user(name, email, password, role):
         json=data,
         timeout=10
     )
+@app.route("/setup-developer")
+def setup_developer():
+    data = {
+        "name": "Developer",
+        "email": "admin@gmail.com",
+        "password_hash": generate_password_hash("admin123"),
+        "role": "developer"
+    }
+
+    r = requests.post(
+        SUPABASE_URL + "/rest/v1/users",
+        headers={**db_headers(), "Prefer": "return=representation"},
+        json=data,
+        timeout=10
+    )
+
+    return r.text, r.status_code
 @app.route("/login", methods=["POST"])
 def login():
     email = request.form.get("email", "").strip().lower()

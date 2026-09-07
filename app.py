@@ -86,16 +86,61 @@ def dashboard():
     return "Invalid role", 403
 @app.route("/")
 def home():
+    if "user_id" in session:
+        return redirect("/dashboard")
+
     return """
     <!DOCTYPE html>
     <html>
     <head>
         <title>College Test Record</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                font-family: Arial;
+                background: #f2f5f9;
+                padding: 20px;
+            }
+
+            .box {
+                max-width: 400px;
+                margin: 50px auto;
+                background: white;
+                padding: 25px;
+                border-radius: 15px;
+            }
+
+            input, button {
+                width: 100%;
+                padding: 12px;
+                margin-top: 10px;
+                box-sizing: border-box;
+            }
+
+            button {
+                background: #2563eb;
+                color: white;
+                border: 0;
+                border-radius: 8px;
+            }
+        </style>
     </head>
+
     <body>
-        <h1>🎓 College Test Record</h1>
-        <p>Website setup successful!</p>
+        <div class="box">
+            <h1>🎓 College Test Record</h1>
+            <p>Login to continue</p>
+
+            <form method="POST" action="/login">
+                <input type="email" name="email"
+                       placeholder="Email" required>
+
+                <input type="password" name="password"
+                       placeholder="Password" required>
+
+                <button type="submit">🔐 Login</button>
+            </form>
+        </div>
     </body>
     </html>
     """

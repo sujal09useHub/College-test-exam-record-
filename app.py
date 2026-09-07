@@ -32,6 +32,41 @@ def create_user(name, email, password, role):
         json=data,
         timeout=10
     )
+@app.route("/login", methods=["POST"])
+def login():
+    email = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "")
+
+    r = requests.get(
+        SUPABASE_URL + "/rest/v1/users",
+        headers=db_headers(),
+        params={
+            "email": "eq." + email,
+            "select": "id,name,email,password_hash,role",
+            "limit": 1
+        },
+        timeout=10
+    )
+
+    if r.status_code != 200:
+        return "Database Error", 500
+
+    users = r.json()
+
+    if not users:
+        return "Invalid email or password", 401
+
+    user = users[0]
+
+    if not check_password_hash(user["password_hash"], password):
+        return "Invalid email or password", 401
+
+    session["user_id"] = user["id"]
+    session["name"] = user["name"]
+    session["email"] = user["email"]
+    session["role"] = user["role"]
+
+    return redirect("/dashboard")
 @app.route("/")
 def home():
     return """

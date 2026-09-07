@@ -821,6 +821,233 @@ def teacher_delete_record(record_id):
         return "Could not delete record: " + r.text, 400
 
     return redirect("/teacher")
+@app.route("/student")
+def student():
+    if "user_id" not in session:
+        return redirect("/")
+
+    if session.get("role") != "student":
+        return "Access Denied", 403
+
+    student_id = session["user_id"]
+
+    # Get only logged-in student's records
+    records_response = requests.get(
+        SUPABASE_URL + "/rest/v1/test_records",
+        headers=db_headers(),
+        params={
+            "student_id": "eq." + str(student_id),
+            "select": "id,subject_id,test_name,marks,total_marks,test_date",
+            "order": "test_date.desc"
+        },
+        timeout=10
+    )
+
+    if records_response.status_code != 200:
+        return "Database Error: " + records_response.text, 500
+
+    records = records_response.json()
+
+    # Get subjects
+    subjects_response = requests.get(
+        SUPABASE_URL + "/rest/v1/subjects",
+        headers=db_headers(),
+        params={
+            "select": "id,name"
+        },
+        timeout=10
+    )
+
+    if subjects_response.status_code != 200:
+        return "Database Error: " + subjects_response.text, 500
+
+    subjects = subjects_response.json()
+
+    subject_names = {
+        str(subject["id"]): subject["name"]
+        for subject in subjects
+    }
+
+    rows = ""
+
+    total_obtained = 0
+    total_marks = 0
+
+    for record in records:
+
+        subject_name = subject_names.get(
+            str(record["subject_id"]),
+            "Unknown Subject"
+        )
+
+        marks = record["marks"]
+        maximum = record["total_marks"]
+
+        total_obtained += marks
+        total_marks += maximum
+
+        percentage = 0
+
+        if maximum:
+            percentage = round((marks / maximum) * 100, 2)
+
+        rows += f"""
+        <tr>
+            <td>{subject_name}</td>
+            <td>{record["test_name"]}</td>
+            <td>{marks}/{maximum}</td>
+            <td>{percentage}%</td>
+            <td>{record["test_date"]}</td>
+        </tr>
+        """
+
+    if not rows:
+        rows = """
+        <tr>
+            <td colspan="5">
+                No test records found.
+            </td>
+        </tr>
+        """
+
+    overall_percentage = 0
+
+    if total_marks > 0:
+        overall_percentage = round(
+            (total_obtained / total_marks) * 100,
+            2
+        )
+
+    return f"""
+    <!DOCTYPE html>
+    <html>
+
+    <head>
+
+        <title>Student Dashboard</title>
+
+        <meta name="viewport"
+              content="width=device-width, initial-scale=1">
+
+        <style>
+
+            body {{
+                font-family: Arial;
+                background: #f2f5f9;
+                padding: 15px;
+            }}
+
+            .box {{
+                max-width: 1000px;
+                margin: auto;
+                background: white;
+                padding: 20px;
+                border-radius: 15px;
+            }}
+
+            .card {{
+                background: #f1f5f9;
+                padding: 15px;
+                margin: 10px 0;
+                border-radius: 10px;
+            }}
+
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }}
+
+            th, td {{
+                border: 1px solid #ccc;
+                padding: 10px;
+                text-align: left;
+            }}
+
+            th {{
+                background: #2563eb;
+                color: white;
+            }}
+
+            @media(max-width:600px) {{
+
+                table {{
+                    font-size: 13px;
+                }}
+
+                th, td {{
+                    padding: 7px;
+                }}
+
+            }}
+
+        </style>
+
+    </head>
+
+    <body>
+
+    <div class="box">
+
+        <h1>🎓 Student Dashboard</h1>
+
+        <h3>
+            Welcome, {session["name"]}
+        </h3>
+
+        <p>
+            📧 {session["email"]}
+        </p>
+
+        <hr>
+
+        <div class="card">
+
+            <h2>📊 My Result</h2>
+
+            <p>
+                <b>Total Marks:</b>
+                {total_obtained}/{total_marks}
+            </p>
+
+            <p>
+                <b>Overall Percentage:</b>
+                {overall_percentage}%
+            </p>
+
+        </div>
+
+        <hr>
+
+        <h2>📚 My Test Records</h2>
+
+        <table>
+
+            <tr>
+                <th>Subject</th>
+                <th>Test</th>
+                <th>Marks</th>
+                <th>Percentage</th>
+                <th>Date</th>
+            </tr>
+
+            {rows}
+
+        </table>
+
+        <br>
+
+        <a href="/logout">
+            🚪 Logout
+        </a>
+
+    </div>
+
+    </body>
+
+    </html>
+    """
+
 
 @app.route("/")
 def home():

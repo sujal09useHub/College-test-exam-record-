@@ -115,6 +115,65 @@ def admin():
     <br>
     <a href="/logout">Logout</a>
     """
+@app.route("/student")
+def student():
+    if "user_id" not in session:
+        return redirect("/")
+
+    if session.get("role") != "student":
+        return "Access Denied", 403
+
+    r = requests.get(
+        SUPABASE_URL + "/rest/v1/test_records",
+        headers=db_headers(),
+        params={
+            "student_id": "eq." + str(session["user_id"]),
+            "select": "id,subject_id,test_name,marks,total_marks,test_date",
+            "order": "test_date.desc"
+        },
+        timeout=10
+    )
+
+    if r.status_code != 200:
+        return "Database Error", 500
+
+    records = r.json()
+
+    rows = ""
+
+    for x in records:
+        rows += f"""
+        <tr>
+            <td>{x["test_name"]}</td>
+            <td>{x["marks"]}/{x["total_marks"]}</td>
+            <td>{x["test_date"] or ""}</td>
+        </tr>
+        """
+
+    if not rows:
+        rows = """
+        <tr>
+            <td colspan="3">No test records yet.</td>
+        </tr>
+        """
+
+    return f"""
+    <h1>🎓 Student Dashboard</h1>
+
+    <p>Welcome, {session["name"]}</p>
+
+    <table border="1" cellpadding="10">
+        <tr>
+            <th>Test</th>
+            <th>Marks</th>
+            <th>Date</th>
+        </tr>
+        {rows}
+    </table>
+
+    <br>
+    <a href="/logout">Logout</a>
+    """
 @app.route("/")
 def home():
     if "user_id" in session:

@@ -96,7 +96,7 @@ def admin():
     if session.get("role") != "developer":
         return "Access Denied", 403
 
- return """
+    return """
     <h1>👨‍💻 Developer Dashboard</h1>
 
     <p>Welcome, Developer!</p>

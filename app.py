@@ -235,6 +235,38 @@ def admin_add_user():
     <h2>✅ User created successfully!</h2>
     <a href="/admin">← Back to Admin Dashboard</a>
     """
+@app.route("/admin/delete-user", methods=["POST"])
+def admin_delete_user():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    if session.get("role") != "developer":
+        return "Access Denied", 403
+
+    user_id = request.form.get("user_id", "")
+
+    if not user_id:
+        return "User ID required", 400
+
+    # Developer स्वतःला delete करू शकणार नाही
+    if str(user_id) == str(session["user_id"]):
+        return "You cannot delete yourself", 400
+
+    r = requests.delete(
+        SUPABASE_URL + "/rest/v1/users",
+        headers=db_headers(),
+        params={
+            "id": "eq." + str(user_id)
+        },
+        timeout=10
+    )
+
+    if r.status_code not in [200, 204]:
+        return "Could not delete user: " + r.text, 400
+
+    return redirect("/admin")
+
 @app.route("/teacher")
 def teacher():
     if "user_id" not in session:
@@ -507,7 +539,7 @@ def teacher():
                 type="number"
                 name="marks"
                 min="0"
-                step="0.01"
+                step="1"
                 required
             >
 
@@ -517,7 +549,7 @@ def teacher():
                 type="number"
                 name="total_marks"
                 min="1"
-                step="0.01"
+                step="1"
                 required
             >
 
@@ -753,7 +785,7 @@ def teacher_edit_record(record_id):
                 name="marks"
                 value="{record["marks"]}"
                 min="0"
-                step="0.01"
+                step="1"
                 required
             >
 
@@ -766,7 +798,7 @@ def teacher_edit_record(record_id):
                 name="total_marks"
                 value="{record["total_marks"]}"
                 min="1"
-                step="0.01"
+                step="1"
                 required
             >
 

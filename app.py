@@ -96,20 +96,70 @@ def admin():
     if session.get("role") != "developer":
         return "Access Denied", 403
 
-    return """
+     r = requests.get(
+        SUPABASE_URL + "/rest/v1/users",
+        headers=db_headers(),
+        params={
+            "select": "id,name,email,role",
+            "order": "name.asc"
+        },
+        timeout=10
+    )
+
+    if r.status_code != 200:
+        return "Database Error: " + r.text, 500
+
+    users = r.json()
+
+    rows = ""
+
+    for user in users:
+        rows += f"""
+        <tr>
+            <td>{user["name"]}</td>
+            <td>{user["email"]}</td>
+            <td>{user["role"]}</td>
+            <td>
+                <form method="POST"
+                      action="/admin/delete-user"
+                      onsubmit="return confirm('Delete this user?');">
+                    <input type="hidden"
+                           name="user_id"
+                           value="{user["id"]}">
+                    <button type="submit">🗑️ Delete</button>
+                </form>
+            </td>
+        </tr>
+        """
+
+    if not rows:
+        rows = """
+        <tr>
+            <td colspan="4">No users found.</td>
+        </tr>
+        """
+
+    return f"""
     <h1>👨‍💻 Developer Dashboard</h1>
 
-    <p>Welcome, Developer!</p>
+    <p>Welcome, {session["name"]}</p>
 
     <hr>
 
-    <h2>👥 User Management</h2>
+    <h2>➕ Add Student / Teacher</h2>
 
     <form method="POST" action="/admin/add-user">
         <input name="name" placeholder="Name" required><br><br>
-        <input name="email" type="email" placeholder="Email" required><br><br>
-        <input name="password" type="password"
-               placeholder="Password" required><br><br>
+
+        <input name="email"
+               type="email"
+               placeholder="Email"
+               required><br><br>
+
+        <input name="password"
+               type="password"
+               placeholder="Password"
+               required><br><br>
 
         <select name="role" required>
             <option value="student">🎓 Student</option>
@@ -117,10 +167,26 @@ def admin():
         </select>
 
         <br><br>
+
         <button type="submit">➕ Add User</button>
     </form>
 
     <hr>
+
+    <h2>👥 Users</h2>
+
+    <table border="1" cellpadding="10">
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Action</th>
+        </tr>
+
+        {rows}
+    </table>
+
+    <br>
 
     <a href="/logout">Logout</a>
     """

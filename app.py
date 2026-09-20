@@ -1732,85 +1732,381 @@ def admin_edit_subject(subject_id):
     subject = subjects[0]
 
     return f"""
-    <!DOCTYPE html>
-    <html>
+<!DOCTYPE html>
+<html>
 
-    <head>
+<head>
 
-        <title>Edit Subject</title>
+    <title>Edit Subject | College Test System</title>
 
-        <meta name="viewport"
-              content="width=device-width, initial-scale=1">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
 
-        <style>
+    <style>
+
+        * {{
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }}
+
+        body {{
+            min-height: 100vh;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 20px;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Arial,
+                sans-serif;
+
+            color: #eaf7ff;
+
+            background:
+                radial-gradient(
+                    circle at 15% 15%,
+                    rgba(0,229,255,0.14),
+                    transparent 32%
+                ),
+                radial-gradient(
+                    circle at 85% 20%,
+                    rgba(124,58,237,0.16),
+                    transparent 32%
+                ),
+                #050914;
+        }}
+
+        body::before {{
+            content: "";
+
+            position: fixed;
+            inset: 0;
+
+            pointer-events: none;
+
+            background-image:
+                linear-gradient(
+                    rgba(255,255,255,0.025) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,0.025) 1px,
+                    transparent 1px
+                );
+
+            background-size: 40px 40px;
+        }}
+
+        .card {{
+            width: 100%;
+            max-width: 520px;
+
+            padding: 36px 28px;
+
+            border-radius: 25px;
+
+            border:
+                1px solid rgba(255,255,255,0.10);
+
+            background:
+                rgba(8,18,35,0.80);
+
+            backdrop-filter: blur(20px);
+
+            box-shadow:
+                0 20px 60px rgba(0,0,0,0.40),
+                0 0 45px rgba(0,200,255,0.08);
+
+            position: relative;
+            z-index: 1;
+        }}
+
+        .top {{
+            text-align: center;
+            margin-bottom: 28px;
+        }}
+
+        .icon {{
+            width: 72px;
+            height: 72px;
+
+            margin: 0 auto 16px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 20px;
+
+            font-size: 35px;
+
+            background:
+                rgba(0,200,255,0.08);
+
+            border:
+                1px solid rgba(0,200,255,0.22);
+
+            box-shadow:
+                0 0 30px rgba(0,200,255,0.10);
+        }}
+
+        h1 {{
+            color: #ffffff;
+
+            font-size: 28px;
+
+            margin-bottom: 8px;
+        }}
+
+        .subtitle {{
+            color: #7f96aa;
+
+            font-size: 13px;
+        }}
+
+        .field {{
+            margin-bottom: 20px;
+        }}
+
+        label {{
+            display: block;
+
+            margin-bottom: 9px;
+
+            color: #a9c1d5;
+
+            font-size: 14px;
+
+            font-weight: 600;
+        }}
+
+        input {{
+            width: 100%;
+
+            padding: 15px;
+
+            border-radius: 13px;
+
+            border:
+                1px solid rgba(255,255,255,0.12);
+
+            outline: none;
+
+            background:
+                rgba(255,255,255,0.045);
+
+            color: #ffffff;
+
+            font-size: 15px;
+
+            transition: 0.25s;
+        }}
+
+        input:focus {{
+            border-color: rgba(0,210,255,0.65);
+
+            box-shadow:
+                0 0 0 3px rgba(0,210,255,0.08),
+                0 0 20px rgba(0,210,255,0.08);
+        }}
+
+        .save {{
+            width: 100%;
+
+            padding: 15px;
+
+            border: 0;
+
+            border-radius: 13px;
+
+            cursor: pointer;
+
+            color: #ffffff;
+
+            font-size: 15px;
+
+            font-weight: 700;
+
+            background:
+                linear-gradient(
+                    100deg,
+                    #008cff,
+                    #00d9ff,
+                    #7c3aed
+                );
+
+            box-shadow:
+                0 0 25px rgba(0,180,255,0.18);
+
+            transition: 0.25s;
+        }}
+
+        .save:hover {{
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 0 35px rgba(0,200,255,0.30);
+        }}
+
+        .back {{
+            display: block;
+
+            margin-top: 18px;
+
+            padding: 13px;
+
+            text-align: center;
+
+            border-radius: 12px;
+
+            border:
+                1px solid rgba(255,255,255,0.09);
+
+            color: #91abc0;
+
+            text-decoration: none;
+
+            font-size: 14px;
+
+            background:
+                rgba(255,255,255,0.025);
+
+            transition: 0.25s;
+        }}
+
+        .back:hover {{
+            color: #ffffff;
+
+            border-color:
+                rgba(0,210,255,0.35);
+        }}
+
+        .status {{
+            display: flex;
+
+            justify-content: center;
+            align-items: center;
+
+            gap: 7px;
+
+            margin-top: 20px;
+
+            color: #60788d;
+
+            font-size: 11px;
+        }}
+
+        .dot {{
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: #35f29a;
+
+            box-shadow:
+                0 0 10px #35f29a;
+        }}
+
+        @media (max-width: 480px) {{
 
             body {{
-                font-family: Arial;
-                background: #f2f5f9;
-                padding: 20px;
+                padding: 14px;
             }}
 
-            .box {{
-                max-width: 450px;
-                margin: 50px auto;
-                background: white;
-                padding: 25px;
-                border-radius: 15px;
+            .card {{
+                padding: 28px 20px;
+
+                border-radius: 21px;
             }}
 
-            input, button {{
-                width: 100%;
-                padding: 12px;
-                margin-top: 10px;
-                box-sizing: border-box;
+            h1 {{
+                font-size: 24px;
             }}
 
-            button {{
-                background: #2563eb;
-                color: white;
-                border: 0;
-                border-radius: 8px;
-            }}
+        }}
 
-        </style>
+    </style>
 
-    </head>
+</head>
 
-    <body>
+<body>
 
-    <div class="box">
+    <div class="card">
 
-        <h1>✏️ Edit Subject</h1>
+        <div class="top">
+
+            <div class="icon">
+                📚
+            </div>
+
+            <h1>
+                Edit Subject
+            </h1>
+
+            <div class="subtitle">
+                Update the subject information
+            </div>
+
+        </div>
 
         <form method="POST">
 
-            <label>📚 Subject Name</label>
+            <div class="field">
 
-            <input
-                type="text"
-                name="name"
-                value="{subject["name"]}"
-                required
+                <label>
+                    📚 Subject Name
+                </label>
+
+                <input
+                    type="text"
+                    name="name"
+                    value="{subject["name"]}"
+                    required
+                >
+
+            </div>
+
+            <button
+                type="submit"
+                class="save"
             >
-
-            <button type="submit">
                 💾 Save Changes
             </button>
 
         </form>
 
-        <br>
-
-        <a href="/admin">
-            ← Back to Admin Dashboard
+        <a
+            href="/admin"
+            class="back"
+        >
+            ← Back to Developer Dashboard
         </a>
+
+        <div class="status">
+
+            <span class="dot"></span>
+
+            Subject Manager • System Online
+
+        </div>
 
     </div>
 
-    </body>
+</body>
 
-    </html>
-    """
+</html>
+"""
 @app.route("/admin/delete-subject/<int:subject_id>", methods=["POST"])
 def admin_delete_subject(subject_id):
 

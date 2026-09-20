@@ -1377,59 +1377,495 @@ def home():
         return redirect("/dashboard")
 
     return """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>College Test Record</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>
-            body {
-                font-family: Arial;
-                background: #f2f5f9;
-                padding: 20px;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>College Test Record | Login</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background:
+                radial-gradient(circle at 20% 20%, #123c68 0%, transparent 35%),
+                radial-gradient(circle at 80% 80%, #30145c 0%, transparent 35%),
+                #050914;
+
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            overflow: hidden;
+        }
+
+        /* Futuristic grid */
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+
+            background-image:
+                linear-gradient(
+                    rgba(0, 200, 255, 0.05) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(0, 200, 255, 0.05) 1px,
+                    transparent 1px
+                );
+
+            background-size: 45px 45px;
+
+            animation: gridMove 15s linear infinite;
+
+            pointer-events: none;
+        }
+
+        @keyframes gridMove {
+            from {
+                transform: translateY(0);
             }
 
-            .box {
-                max-width: 400px;
-                margin: 50px auto;
-                background: white;
-                padding: 25px;
-                border-radius: 15px;
+            to {
+                transform: translateY(45px);
+            }
+        }
+
+        /* Glow circles */
+
+        .glow {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+
+            border-radius: 50%;
+
+            filter: blur(90px);
+
+            opacity: 0.35;
+
+            pointer-events: none;
+        }
+
+        .glow.one {
+            background: #00d9ff;
+            top: -100px;
+            left: -100px;
+        }
+
+        .glow.two {
+            background: #8b5cf6;
+            bottom: -100px;
+            right: -100px;
+        }
+
+        /* Main container */
+
+        .login-container {
+            width: 100%;
+            max-width: 430px;
+
+            padding: 20px;
+
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Glass card */
+
+        .login-card {
+            padding: 38px 32px;
+
+            border-radius: 24px;
+
+            background:
+                rgba(255, 255, 255, 0.07);
+
+            border:
+                1px solid rgba(255, 255, 255, 0.15);
+
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+
+            box-shadow:
+                0 0 40px rgba(0, 200, 255, 0.12),
+                inset 0 0 30px rgba(255, 255, 255, 0.02);
+
+            animation: cardAppear 0.8s ease;
+        }
+
+        @keyframes cardAppear {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.97);
             }
 
-            input, button {
-                width: 100%;
-                padding: 12px;
-                margin-top: 10px;
-                box-sizing: border-box;
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Logo */
+
+        .logo {
+            width: 75px;
+            height: 75px;
+
+            margin: 0 auto 20px;
+
+            border-radius: 22px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 35px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #00d9ff,
+                    #6366f1
+                );
+
+            box-shadow:
+                0 0 30px rgba(0, 217, 255, 0.4);
+
+            animation: logoGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes logoGlow {
+            0%, 100% {
+                box-shadow:
+                    0 0 20px rgba(0, 217, 255, 0.35);
             }
 
-            button {
-                background: #2563eb;
-                color: white;
-                border: 0;
-                border-radius: 8px;
+            50% {
+                box-shadow:
+                    0 0 40px rgba(99, 102, 241, 0.6);
             }
-        </style>
-    </head>
+        }
 
-    <body>
-        <div class="box">
-            <h1>🎓 College Test Record</h1>
-            <p>Login to continue</p>
+        h1 {
+            text-align: center;
+
+            font-size: 27px;
+
+            margin-bottom: 8px;
+
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+            text-align: center;
+
+            color: #9caec2;
+
+            font-size: 14px;
+
+            margin-bottom: 30px;
+        }
+
+        /* Input */
+
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        .input-group label {
+            display: block;
+
+            font-size: 13px;
+
+            color: #b8c7d9;
+
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+
+            left: 15px;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            font-size: 17px;
+
+            opacity: 0.7;
+        }
+
+        input {
+            width: 100%;
+
+            padding: 14px 15px 14px 45px;
+
+            border-radius: 12px;
+
+            border:
+                1px solid rgba(255, 255, 255, 0.12);
+
+            background:
+                rgba(0, 0, 0, 0.22);
+
+            color: white;
+
+            outline: none;
+
+            font-size: 15px;
+
+            transition: 0.3s;
+        }
+
+        input::placeholder {
+            color: #718096;
+        }
+
+        input:focus {
+            border-color: #00d9ff;
+
+            box-shadow:
+                0 0 15px rgba(0, 217, 255, 0.15);
+
+            background:
+                rgba(0, 0, 0, 0.32);
+        }
+
+        /* Login button */
+
+        .login-button {
+            width: 100%;
+
+            padding: 14px;
+
+            margin-top: 8px;
+
+            border: none;
+
+            border-radius: 12px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #00b8e6,
+                    #6366f1
+                );
+
+            color: white;
+
+            font-size: 16px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            transition: 0.3s;
+
+            box-shadow:
+                0 8px 25px rgba(0, 180, 230, 0.2);
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 12px 35px rgba(0, 217, 255, 0.35);
+        }
+
+        .login-button:active {
+            transform: scale(0.98);
+        }
+
+        /* Footer */
+
+        .footer {
+            text-align: center;
+
+            margin-top: 25px;
+
+            color: #65758b;
+
+            font-size: 12px;
+        }
+
+        .status {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 7px;
+
+            margin-top: 10px;
+
+            color: #7f91a7;
+
+            font-size: 11px;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: #22c55e;
+
+            box-shadow:
+                0 0 10px #22c55e;
+        }
+
+        /* Mobile */
+
+        @media (max-width: 480px) {
+
+            .login-container {
+                padding: 15px;
+            }
+
+            .login-card {
+                padding: 32px 22px;
+
+                border-radius: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .logo {
+                width: 68px;
+                height: 68px;
+
+                font-size: 30px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="glow one"></div>
+    <div class="glow two"></div>
+
+    <div class="login-container">
+
+        <div class="login-card">
+
+            <div class="logo">
+                🎓
+            </div>
+
+            <h1>
+                College Test Record
+            </h1>
+
+            <p class="subtitle">
+                Smart Academic Management System
+            </p>
 
             <form method="POST" action="/login">
-                <input type="email" name="email"
-                       placeholder="Email" required>
 
-                <input type="password" name="password"
-                       placeholder="Password" required>
+                <div class="input-group">
 
-                <button type="submit">🔐 Login</button>
+                    <label>
+                        Email Address
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span class="input-icon">
+                            ✉️
+                        </span>
+
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="Enter your email"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+                <div class="input-group">
+
+                    <label>
+                        Password
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span class="input-icon">
+                            🔐
+                        </span>
+
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Enter your password"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="login-button">
+
+                    🚀 Login to Dashboard
+
+                </button>
+
             </form>
+
+            <div class="status">
+
+                <span class="status-dot"></span>
+
+                System Online
+
+            </div>
+
+            <div class="footer">
+
+                College Test & Exam Record Management System
+                <br><br>
+                Secure • Smart • Connected
+
+            </div>
+
         </div>
-    </body>
-    </html>
+
+    </div>
+
+</body>
+</html>
     """
 
 if __name__ == "__main__":

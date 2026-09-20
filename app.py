@@ -3345,10 +3345,10 @@ def teacher_edit_record(record_id):
             return "All fields are required", 400
 
         try:
-           marks_value = int(marks)
-           total_marks_value = int(total_marks)
+            marks_value = int(marks)
+            total_marks_value = int(total_marks)
         except ValueError:
-           return "Marks must be whole numbers", 400
+            return "Marks must be whole numbers", 400
 
         if marks_value < 0:
             return "Marks cannot be negative", 400
@@ -3404,88 +3404,441 @@ def teacher_edit_record(record_id):
     record = records[0]
 
     return f"""
-    <!DOCTYPE html>
-    <html>
+<!DOCTYPE html>
+<html>
 
-    <head>
+<head>
 
-        <title>Edit Test Record</title>
+    <title>Edit Test Record | College Test System</title>
 
-        <meta name="viewport"
-              content="width=device-width, initial-scale=1">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
 
-    </head>
+    <style>
 
-    <body>
+        * {{
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }}
 
-        <h1>✏️ Edit Test Record</h1>
+        body {{
+            min-height: 100vh;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 20px;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Arial,
+                sans-serif;
+
+            color: #eaf7ff;
+
+            background:
+                radial-gradient(
+                    circle at 15% 15%,
+                    rgba(0,229,255,0.14),
+                    transparent 32%
+                ),
+                radial-gradient(
+                    circle at 85% 20%,
+                    rgba(124,58,237,0.16),
+                    transparent 32%
+                ),
+                #050914;
+        }}
+
+        body::before {{
+            content: "";
+
+            position: fixed;
+            inset: 0;
+
+            pointer-events: none;
+
+            background-image:
+                linear-gradient(
+                    rgba(255,255,255,0.025) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,0.025) 1px,
+                    transparent 1px
+                );
+
+            background-size: 40px 40px;
+        }}
+
+        .card {{
+            width: 100%;
+            max-width: 560px;
+
+            padding: 34px 28px;
+
+            border-radius: 25px;
+
+            border:
+                1px solid rgba(255,255,255,0.10);
+
+            background:
+                rgba(8,18,35,0.80);
+
+            backdrop-filter: blur(20px);
+
+            box-shadow:
+                0 20px 60px rgba(0,0,0,0.40),
+                0 0 45px rgba(0,200,255,0.08);
+
+            position: relative;
+            z-index: 1;
+        }}
+
+        .top {{
+            text-align: center;
+            margin-bottom: 28px;
+        }}
+
+        .icon {{
+            width: 70px;
+            height: 70px;
+
+            margin: 0 auto 16px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 20px;
+
+            font-size: 34px;
+
+            background:
+                rgba(0,200,255,0.08);
+
+            border:
+                1px solid rgba(0,200,255,0.22);
+
+            box-shadow:
+                0 0 30px rgba(0,200,255,0.10);
+        }}
+
+        h1 {{
+            color: #ffffff;
+
+            font-size: 27px;
+
+            margin-bottom: 8px;
+        }}
+
+        .subtitle {{
+            color: #7f96aa;
+
+            font-size: 13px;
+        }}
+
+        .field {{
+            margin-bottom: 18px;
+        }}
+
+        label {{
+            display: block;
+
+            margin-bottom: 8px;
+
+            color: #a9c1d5;
+
+            font-size: 13px;
+
+            font-weight: 600;
+        }}
+
+        input {{
+            width: 100%;
+
+            padding: 14px 15px;
+
+            border-radius: 12px;
+
+            border:
+                1px solid rgba(255,255,255,0.12);
+
+            outline: none;
+
+            background:
+                rgba(255,255,255,0.045);
+
+            color: #ffffff;
+
+            font-size: 15px;
+
+            transition: 0.25s;
+        }}
+
+        input:focus {{
+            border-color: rgba(0,210,255,0.65);
+
+            box-shadow:
+                0 0 0 3px rgba(0,210,255,0.08),
+                0 0 20px rgba(0,210,255,0.08);
+        }}
+
+        input::placeholder {{
+            color: #60778b;
+        }}
+
+        input[type="date"] {{
+            color-scheme: dark;
+        }}
+
+        .save {{
+            width: 100%;
+
+            padding: 15px;
+
+            margin-top: 8px;
+
+            border: 0;
+
+            border-radius: 13px;
+
+            cursor: pointer;
+
+            color: #ffffff;
+
+            font-size: 15px;
+
+            font-weight: 700;
+
+            background:
+                linear-gradient(
+                    100deg,
+                    #008cff,
+                    #00d9ff,
+                    #7c3aed
+                );
+
+            box-shadow:
+                0 0 25px rgba(0,180,255,0.18);
+
+            transition: 0.25s;
+        }}
+
+        .save:hover {{
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 0 35px rgba(0,200,255,0.30);
+        }}
+
+        .back {{
+            display: block;
+
+            margin-top: 18px;
+
+            padding: 13px;
+
+            text-align: center;
+
+            border-radius: 12px;
+
+            border:
+                1px solid rgba(255,255,255,0.09);
+
+            color: #91abc0;
+
+            text-decoration: none;
+
+            font-size: 14px;
+
+            background:
+                rgba(255,255,255,0.025);
+
+            transition: 0.25s;
+        }}
+
+        .back:hover {{
+            color: #ffffff;
+
+            border-color:
+                rgba(0,210,255,0.35);
+        }}
+
+        .status {{
+            display: flex;
+
+            justify-content: center;
+            align-items: center;
+
+            gap: 7px;
+
+            margin-top: 20px;
+
+            color: #60788d;
+
+            font-size: 11px;
+        }}
+
+        .dot {{
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: #35f29a;
+
+            box-shadow:
+                0 0 10px #35f29a;
+        }}
+
+        @media (max-width: 480px) {{
+
+            body {{
+                padding: 14px;
+            }}
+
+            .card {{
+                padding: 28px 20px;
+
+                border-radius: 21px;
+            }}
+
+            h1 {{
+                font-size: 24px;
+            }}
+
+        }}
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="card">
+
+        <div class="top">
+
+            <div class="icon">
+                ✏️
+            </div>
+
+            <h1>
+                Edit Test Record
+            </h1>
+
+            <div class="subtitle">
+                Update the test information below
+            </div>
+
+        </div>
 
         <form method="POST">
 
-            <label>Test Name</label><br>
+            <div class="field">
 
-            <input
-                type="text"
-                name="test_name"
-                value="{record["test_name"]}"
-                required
+                <label>
+                    📝 Test Name
+                </label>
+
+                <input
+                    type="text"
+                    name="test_name"
+                    value="{record["test_name"]}"
+                    required
+                >
+
+            </div>
+
+            <div class="field">
+
+                <label>
+                    📊 Marks
+                </label>
+
+                <input
+                    type="number"
+                    name="marks"
+                    value="{record["marks"]}"
+                    min="0"
+                    step="1"
+                    required
+                >
+
+            </div>
+
+            <div class="field">
+
+                <label>
+                    📋 Total Marks
+                </label>
+
+                <input
+                    type="number"
+                    name="total_marks"
+                    value="{record["total_marks"]}"
+                    min="1"
+                    step="1"
+                    required
+                >
+
+            </div>
+
+            <div class="field">
+
+                <label>
+                    📅 Test Date
+                </label>
+
+                <input
+                    type="date"
+                    name="test_date"
+                    value="{record["test_date"]}"
+                    required
+                >
+
+            </div>
+
+            <button
+                type="submit"
+                class="save"
             >
-
-            <br><br>
-
-            <label>Marks</label><br>
-
-            <input
-                type="number"
-                name="marks"
-                value="{record["marks"]}"
-                min="0"
-                step="1"
-                required
-            >
-
-            <br><br>
-
-            <label>Total Marks</label><br>
-
-            <input
-                type="number"
-                name="total_marks"
-                value="{record["total_marks"]}"
-                min="1"
-                step="1"
-                required
-            >
-
-            <br><br>
-
-            <label>Date</label><br>
-
-            <input
-                type="date"
-                name="test_date"
-                value="{record["test_date"]}"
-                required
-            >
-
-            <br><br>
-
-            <button type="submit">
                 💾 Save Changes
             </button>
 
         </form>
 
-        <br>
-
-        <a href="/teacher">
+        <a
+            href="/teacher"
+            class="back"
+        >
             ← Back to Teacher Dashboard
         </a>
 
-    </body>
+        <div class="status">
 
-    </html>
-    """
+            <span class="dot"></span>
+
+            Secure Record Editor • System Online
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
+"""
+
 @app.route("/teacher/delete-record/<int:record_id>", methods=["POST"])
 def teacher_delete_record(record_id):
 

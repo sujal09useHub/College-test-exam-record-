@@ -565,7 +565,9 @@ def teacher():
     if session.get("role") != "teacher":
         return "Access Denied", 403
 
-    # Get students
+    # =========================
+    # GET STUDENTS
+    # =========================
     students_response = requests.get(
         SUPABASE_URL + "/rest/v1/users",
         headers=db_headers(),
@@ -582,7 +584,9 @@ def teacher():
 
     students = students_response.json()
 
-    # Get subjects
+    # =========================
+    # GET SUBJECTS
+    # =========================
     subjects_response = requests.get(
         SUPABASE_URL + "/rest/v1/subjects",
         headers=db_headers(),
@@ -598,7 +602,9 @@ def teacher():
 
     subjects = subjects_response.json()
 
-    # Get all test records
+    # =========================
+    # GET TEST RECORDS
+    # =========================
     records_response = requests.get(
         SUPABASE_URL + "/rest/v1/test_records",
         headers=db_headers(),
@@ -614,7 +620,9 @@ def teacher():
 
     records = records_response.json()
 
-    # Student dropdown
+    # =========================
+    # STUDENT OPTIONS
+    # =========================
     student_options = ""
 
     for student in students:
@@ -624,7 +632,9 @@ def teacher():
         </option>
         """
 
-    # Subject dropdown
+    # =========================
+    # SUBJECT OPTIONS
+    # =========================
     subject_options = ""
 
     for subject in subjects:
@@ -634,7 +644,9 @@ def teacher():
         </option>
         """
 
-    # Create lookup dictionaries
+    # =========================
+    # LOOKUP DICTIONARIES
+    # =========================
     student_names = {
         str(student["id"]): student["name"]
         for student in students
@@ -645,10 +657,13 @@ def teacher():
         for subject in subjects
     }
 
-    # Records table
+    # =========================
+    # RECORD TABLE
+    # =========================
     rows = ""
 
     for record in records:
+
         student_name = student_names.get(
             str(record["student_id"]),
             "Unknown Student"
@@ -661,233 +676,1029 @@ def teacher():
 
         rows += f"""
         <tr>
-            <td>{student_name}</td>
-            <td>{subject_name}</td>
-            <td>{record["test_name"]}</td>
-            <td>{record["marks"]}/{record["total_marks"]}</td>
-            <td>{record["test_date"]}</td>
 
             <td>
-                <a href="/teacher/edit-record/{record["id"]}">
+                <div class="student-name">
+                    🎓 {student_name}
+                </div>
+            </td>
+
+            <td>
+                <span class="subject-tag">
+                    📚 {subject_name}
+                </span>
+            </td>
+
+            <td>
+                📝 {record["test_name"]}
+            </td>
+
+            <td>
+                <span class="marks">
+                    {record["marks"]}/{record["total_marks"]}
+                </span>
+            </td>
+
+            <td>
+                📅 {record["test_date"]}
+            </td>
+
+            <td>
+
+                <a
+                    class="edit-btn"
+                    href="/teacher/edit-record/{record["id"]}"
+                >
                     ✏️ Edit
                 </a>
 
-                <form method="POST"
-                      action="/teacher/delete-record/{record["id"]}"
-                      style="display:inline;"
-                      onsubmit="return confirm('Delete this test record?');">
+                <form
+                    method="POST"
+                    action="/teacher/delete-record/{record["id"]}"
+                    class="delete-form"
+                    onsubmit="return confirm('Delete this test record?');"
+                >
 
-                    <button type="submit">
+                    <button
+                        type="submit"
+                        class="delete-btn"
+                    >
                         🗑️ Delete
                     </button>
 
                 </form>
+
             </td>
+
         </tr>
         """
 
     if not rows:
         rows = """
         <tr>
-            <td colspan="6">
-                No test records yet.
+            <td colspan="6" class="empty">
+                <div class="empty-icon">📊</div>
+                <div>No test records yet.</div>
+                <small>Add the first test record above.</small>
             </td>
         </tr>
         """
 
+    # =========================
+    # FUTURISTIC UI
+    # =========================
     return f"""
-    <!DOCTYPE html>
-    <html>
+<!DOCTYPE html>
+<html>
 
-    <head>
+<head>
 
-        <title>Teacher Dashboard</title>
+    <title>Teacher Dashboard | College Test System</title>
 
-        <meta name="viewport"
-              content="width=device-width, initial-scale=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
 
-        <style>
+    <style>
 
-            body {{
-                font-family: Arial;
-                background: #f2f5f9;
-                padding: 15px;
+        * {{
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }}
+
+        body {{
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Arial,
+                sans-serif;
+
+            min-height: 100vh;
+
+            color: #e8f4ff;
+
+            background:
+                radial-gradient(
+                    circle at 10% 10%,
+                    rgba(0, 229, 255, 0.13),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 90% 20%,
+                    rgba(139, 92, 246, 0.15),
+                    transparent 32%
+                ),
+                radial-gradient(
+                    circle at 50% 100%,
+                    rgba(0, 153, 255, 0.10),
+                    transparent 35%
+                ),
+                #050914;
+
+            overflow-x: hidden;
+        }}
+
+        body::before {{
+            content: "";
+
+            position: fixed;
+
+            inset: 0;
+
+            pointer-events: none;
+
+            background-image:
+                linear-gradient(
+                    rgba(255,255,255,0.025) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,0.025) 1px,
+                    transparent 1px
+                );
+
+            background-size: 40px 40px;
+
+            mask-image:
+                linear-gradient(
+                    to bottom,
+                    black,
+                    transparent
+                );
+        }}
+
+        .container {{
+            width: 94%;
+            max-width: 1250px;
+
+            margin: 30px auto;
+
+            position: relative;
+            z-index: 1;
+        }}
+
+        /* ================= HEADER ================= */
+
+        .header {{
+            display: flex;
+
+            justify-content: space-between;
+            align-items: center;
+
+            gap: 20px;
+
+            padding: 24px;
+
+            margin-bottom: 22px;
+
+            border: 1px solid rgba(255,255,255,0.09);
+
+            border-radius: 22px;
+
+            background:
+                rgba(9, 18, 35, 0.72);
+
+            backdrop-filter: blur(18px);
+
+            box-shadow:
+                0 0 35px rgba(0, 200, 255, 0.08);
+        }}
+
+        .brand {{
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }}
+
+        .logo {{
+            width: 55px;
+            height: 55px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 16px;
+
+            font-size: 27px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(0,229,255,0.18),
+                    rgba(139,92,246,0.18)
+                );
+
+            border: 1px solid rgba(0,229,255,0.35);
+
+            box-shadow:
+                0 0 25px rgba(0,229,255,0.18);
+        }}
+
+        .title {{
+            font-size: 25px;
+            font-weight: 800;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #ffffff,
+                    #72eaff
+                );
+
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }}
+
+        .subtitle {{
+            margin-top: 4px;
+            color: #8da4bd;
+            font-size: 13px;
+        }}
+
+        .logout {{
+            text-decoration: none;
+
+            color: #ffb4b4;
+
+            border: 1px solid rgba(255,80,80,0.3);
+
+            background: rgba(255,60,60,0.08);
+
+            padding: 10px 15px;
+
+            border-radius: 12px;
+
+            transition: 0.25s;
+        }}
+
+        .logout:hover {{
+            background: rgba(255,60,60,0.18);
+
+            box-shadow:
+                0 0 18px rgba(255,60,60,0.15);
+        }}
+
+        /* ================= WELCOME ================= */
+
+        .welcome {{
+            margin-bottom: 20px;
+
+            color: #a9bdd2;
+        }}
+
+        .welcome strong {{
+            color: #65e8ff;
+        }}
+
+        /* ================= STATS ================= */
+
+        .stats {{
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 15px;
+
+            margin-bottom: 22px;
+        }}
+
+        .stat {{
+            padding: 20px;
+
+            border-radius: 18px;
+
+            border: 1px solid rgba(255,255,255,0.08);
+
+            background:
+                rgba(10,20,39,0.70);
+
+            backdrop-filter: blur(15px);
+
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.04);
+        }}
+
+        .stat-icon {{
+            font-size: 22px;
+            margin-bottom: 10px;
+        }}
+
+        .stat-number {{
+            font-size: 28px;
+            font-weight: 800;
+
+            color: #ffffff;
+        }}
+
+        .stat-label {{
+            color: #8298af;
+            font-size: 13px;
+            margin-top: 4px;
+        }}
+
+        /* ================= ADD TEST ================= */
+
+        .card {{
+            padding: 25px;
+
+            margin-bottom: 22px;
+
+            border-radius: 22px;
+
+            border:
+                1px solid rgba(255,255,255,0.09);
+
+            background:
+                rgba(8,18,35,0.72);
+
+            backdrop-filter: blur(18px);
+
+            box-shadow:
+                0 15px 45px rgba(0,0,0,0.20);
+        }}
+
+        .section-title {{
+            font-size: 20px;
+
+            margin-bottom: 5px;
+
+            color: #ffffff;
+        }}
+
+        .section-description {{
+            color: #8197ae;
+            font-size: 13px;
+
+            margin-bottom: 22px;
+        }}
+
+        .form-grid {{
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 15px;
+        }}
+
+        .field {{
+            display: flex;
+            flex-direction: column;
+        }}
+
+        .field label {{
+            color: #9db3ca;
+
+            font-size: 13px;
+
+            margin-bottom: 7px;
+        }}
+
+        input,
+        select {{
+            width: 100%;
+
+            padding: 13px 14px;
+
+            border-radius: 12px;
+
+            border:
+                1px solid rgba(255,255,255,0.10);
+
+            background:
+                rgba(2,8,20,0.75);
+
+            color: #eaf7ff;
+
+            outline: none;
+
+            transition: 0.25s;
+        }}
+
+        input::placeholder {{
+            color: #586c82;
+        }}
+
+        input:focus,
+        select:focus {{
+            border-color: #27dfff;
+
+            box-shadow:
+                0 0 0 3px rgba(39,223,255,0.08),
+                0 0 20px rgba(39,223,255,0.10);
+        }}
+
+        select option {{
+            background: #081224;
+            color: white;
+        }}
+
+        .add-btn {{
+            width: 100%;
+
+            margin-top: 18px;
+
+            padding: 14px;
+
+            border: none;
+
+            border-radius: 13px;
+
+            color: white;
+
+            font-size: 15px;
+            font-weight: 700;
+
+            cursor: pointer;
+
+            background:
+                linear-gradient(
+                    100deg,
+                    #008cff,
+                    #00d9ff,
+                    #7c3aed
+                );
+
+            box-shadow:
+                0 0 25px rgba(0,180,255,0.18);
+
+            transition: 0.25s;
+        }}
+
+        .add-btn:hover {{
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 0 35px rgba(0,200,255,0.30);
+        }}
+
+        /* ================= RECORDS ================= */
+
+        .table-wrapper {{
+            width: 100%;
+
+            overflow-x: auto;
+
+            border-radius: 15px;
+
+            border:
+                1px solid rgba(255,255,255,0.07);
+        }}
+
+        table {{
+            width: 100%;
+
+            min-width: 850px;
+
+            border-collapse: collapse;
+        }}
+
+        th {{
+            padding: 15px;
+
+            text-align: left;
+
+            font-size: 12px;
+
+            color: #7f9bb6;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.6px;
+
+            background:
+                rgba(0,229,255,0.045);
+
+            border-bottom:
+                1px solid rgba(255,255,255,0.08);
+        }}
+
+        td {{
+            padding: 14px 15px;
+
+            color: #c8d7e8;
+
+            font-size: 13px;
+
+            border-bottom:
+                1px solid rgba(255,255,255,0.055);
+        }}
+
+        tr:hover td {{
+            background:
+                rgba(0,229,255,0.035);
+        }}
+
+        .student-name {{
+            color: #e8f6ff;
+            font-weight: 600;
+        }}
+
+        .subject-tag {{
+            display: inline-block;
+
+            padding: 5px 9px;
+
+            border-radius: 8px;
+
+            color: #8eeeff;
+
+            background:
+                rgba(0,200,255,0.08);
+
+            border:
+                1px solid rgba(0,200,255,0.13);
+        }}
+
+        .marks {{
+            color: #7cf4b4;
+
+            font-weight: 700;
+        }}
+
+        .edit-btn {{
+            display: inline-block;
+
+            text-decoration: none;
+
+            padding: 7px 10px;
+
+            margin-right: 5px;
+
+            border-radius: 8px;
+
+            color: #8eeeff;
+
+            background:
+                rgba(0,180,255,0.09);
+
+            border:
+                1px solid rgba(0,180,255,0.18);
+
+            transition: 0.2s;
+        }}
+
+        .edit-btn:hover {{
+            background:
+                rgba(0,180,255,0.18);
+        }}
+
+        .delete-form {{
+            display: inline;
+        }}
+
+        .delete-btn {{
+            padding: 7px 10px;
+
+            border-radius: 8px;
+
+            border:
+                1px solid rgba(255,70,90,0.18);
+
+            color: #ff9da8;
+
+            background:
+                rgba(255,60,80,0.08);
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }}
+
+        .delete-btn:hover {{
+            background:
+                rgba(255,60,80,0.18);
+        }}
+
+        .empty {{
+            text-align: center;
+
+            padding: 45px !important;
+
+            color: #71879d;
+        }}
+
+        .empty-icon {{
+            font-size: 35px;
+            margin-bottom: 10px;
+        }}
+
+        .empty small {{
+            display: block;
+            margin-top: 7px;
+            color: #53687d;
+        }}
+
+        /* ================= STATUS ================= */
+
+        .status {{
+            display: flex;
+
+            justify-content: center;
+            align-items: center;
+
+            gap: 7px;
+
+            margin-top: 18px;
+
+            color: #6e879e;
+
+            font-size: 12px;
+        }}
+
+        .status-dot {{
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: #35f29a;
+
+            box-shadow:
+                0 0 10px #35f29a;
+        }}
+
+        /* ================= MOBILE ================= */
+
+        @media (max-width: 700px) {{
+
+            .container {{
+                width: 94%;
+                margin: 15px auto;
             }}
 
-            .box {{
-                max-width: 1100px;
-                margin: auto;
-                background: white;
-                padding: 20px;
-                border-radius: 15px;
+            .header {{
+                padding: 18px;
+
+                align-items: flex-start;
             }}
 
-            input, select, button {{
-                width: 100%;
-                padding: 12px;
-                margin-top: 8px;
-                margin-bottom: 12px;
-                box-sizing: border-box;
+            .title {{
+                font-size: 20px;
             }}
 
-            button {{
-                background: #2563eb;
-                color: white;
-                border: 0;
-                border-radius: 8px;
+            .logo {{
+                width: 45px;
+                height: 45px;
+                font-size: 22px;
             }}
 
-            table {{
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 15px;
+            .logout {{
+                font-size: 12px;
+                padding: 8px 10px;
             }}
 
-            th, td {{
-                border: 1px solid #ccc;
-                padding: 10px;
-                text-align: left;
+            .stats {{
+                grid-template-columns: 1fr;
             }}
 
-            th {{
-                background: #f1f5f9;
+            .form-grid {{
+                grid-template-columns: 1fr;
             }}
 
-            .delete-btn {{
-                background: #dc2626;
-                width: auto;
-                padding: 7px 10px;
-                margin: 5px;
+            .card {{
+                padding: 18px;
             }}
 
-            .edit-link {{
-                display: inline-block;
-                background: #16a34a;
-                color: white;
-                padding: 7px 10px;
-                border-radius: 6px;
-                text-decoration: none;
-            }}
+        }}
 
-        </style>
+    </style>
 
-    </head>
+</head>
 
-    <body>
+<body>
 
-    <div class="box">
+<div class="container">
 
-        <h1>👨‍🏫 Teacher Dashboard</h1>
+    <!-- HEADER -->
 
-        <p>
-            Welcome, {session["name"]}
-        </p>
+    <div class="header">
 
-        <hr>
+        <div class="brand">
 
-        <h2>➕ Add Test Marks</h2>
+            <div class="logo">
+                👨‍🏫
+            </div>
 
-        <form method="POST"
-              action="/teacher/add-record">
+            <div>
 
-            <label>🎓 Student</label>
+                <div class="title">
+                    Teacher Portal
+                </div>
 
-            <select name="student_id" required>
+                <div class="subtitle">
+                    College Test & Exam Management System
+                </div>
 
-                <option value="">
-                    Select Student
-                </option>
+            </div>
 
-                {student_options}
+        </div>
 
-            </select>
-
-            <label>📚 Subject</label>
-
-            <select name="subject_id" required>
-
-                <option value="">
-                    Select Subject
-                </option>
-
-                {subject_options}
-
-            </select>
-
-            <label>📝 Test Name</label>
-
-            <input
-                type="text"
-                name="test_name"
-                placeholder="Example: Unit Test 1"
-                required
-            >
-
-            <label>📊 Marks</label>
-
-            <input
-                type="number"
-                name="marks"
-                min="0"
-                step="1"
-                required
-            >
-
-            <label>📋 Total Marks</label>
-
-            <input
-                type="number"
-                name="total_marks"
-                min="1"
-                step="1"
-                required
-            >
-
-            <label>📅 Test Date</label>
-
-            <input
-                type="date"
-                name="test_date"
-                required
-            >
-
-            <button type="submit">
-                ➕ Add Test Record
-            </button>
-
-        </form>
-
-        <hr>
-
-        <h2>📊 All Student Test Records</h2>
-
-        <table>
-
-            <tr>
-                <th>Student</th>
-                <th>Subject</th>
-                <th>Test</th>
-                <th>Marks</th>
-                <th>Date</th>
-                <th>Action</th>
-            </tr>
-
-            {rows}
-
-        </table>
-
-        <br>
-
-        <a href="/logout">
+        <a
+            class="logout"
+            href="/logout"
+        >
             🚪 Logout
         </a>
 
     </div>
 
-    </body>
 
-    </html>
-    """
+    <!-- WELCOME -->
+
+    <div class="welcome">
+        Welcome back,
+        <strong>{session["name"]}</strong>
+        👋
+    </div>
+
+
+    <!-- STATS -->
+
+    <div class="stats">
+
+        <div class="stat">
+
+            <div class="stat-icon">
+                👨‍🎓
+            </div>
+
+            <div class="stat-number">
+                {len(students)}
+            </div>
+
+            <div class="stat-label">
+                Total Students
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-icon">
+                📚
+            </div>
+
+            <div class="stat-number">
+                {len(subjects)}
+            </div>
+
+            <div class="stat-label">
+                Total Subjects
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-icon">
+                📊
+            </div>
+
+            <div class="stat-number">
+                {len(records)}
+            </div>
+
+            <div class="stat-label">
+                Test Records
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ADD TEST -->
+
+    <div class="card">
+
+        <div class="section-title">
+            ➕ Add Test Marks
+        </div>
+
+        <div class="section-description">
+            Create a new test record for a student.
+        </div>
+
+
+        <form
+            method="POST"
+            action="/teacher/add-record"
+        >
+
+            <div class="form-grid">
+
+
+                <div class="field">
+
+                    <label>
+                        🎓 Student
+                    </label>
+
+                    <select
+                        name="student_id"
+                        required
+                    >
+
+                        <option value="">
+                            Select Student
+                        </option>
+
+                        {student_options}
+
+                    </select>
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        📚 Subject
+                    </label>
+
+                    <select
+                        name="subject_id"
+                        required
+                    >
+
+                        <option value="">
+                            Select Subject
+                        </option>
+
+                        {subject_options}
+
+                    </select>
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        📝 Test Name
+                    </label>
+
+                    <input
+                        type="text"
+                        name="test_name"
+       placeholder="Example: Unit Test 1"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        📅 Test Date
+                    </label>
+
+                    <input
+                        type="date"
+                        name="test_date"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        📊 Marks Obtained
+                    </label>
+
+                    <input
+                        type="number"
+                        name="marks"
+                        min="0"
+                        step="1"
+                        placeholder="Example: 42"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        📋 Total Marks
+                    </label>
+
+                    <input
+                        type="number"
+                        name="total_marks"
+                        min="1"
+                        step="1"
+                        placeholder="Example: 50"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="add-btn"
+            >
+                ⚡ Add Test Record
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- RECORDS -->
+
+    <div class="card">
+
+        <div class="section-title">
+            📊 All Student Test Records
+        </div>
+
+        <div class="section-description">
+            View and manage test performance records.
+        </div>
+
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Student
+                        </th>
+
+                        <th>
+                            Subject
+                        </th>
+
+                        <th>
+                            Test
+                        </th>
+
+                        <th>
+                            Marks
+                        </th>
+
+                        <th>
+                            Date
+                        </th>
+
+                        <th>
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {rows}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <div class="status">
+
+        <span class="status-dot"></span>
+
+        College Test System • System Online
+
+    </div>
+
+
+</div>
+
+</body>
+
+</html>
+"""
 
 @app.route("/teacher/add-record", methods=["POST"])
 def teacher_add_record():

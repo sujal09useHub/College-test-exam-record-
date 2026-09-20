@@ -113,6 +113,9 @@ def admin():
     if session.get("role") != "developer":
         return "Access Denied", 403
 
+    # =========================
+    # GET USERS
+    # =========================
     r = requests.get(
         SUPABASE_URL + "/rest/v1/users",
         headers=db_headers(),
@@ -127,8 +130,10 @@ def admin():
         return "Database Error: " + r.text, 500
 
     users = r.json()
-    
-        # Get subjects
+
+    # =========================
+    # GET SUBJECTS
+    # =========================
     subjects_response = requests.get(
         SUPABASE_URL + "/rest/v1/subjects",
         headers=db_headers(),
@@ -144,149 +149,1206 @@ def admin():
 
     subjects = subjects_response.json()
 
+    # =========================
+    # SUBJECT ROWS
+    # =========================
     subject_rows = ""
 
     for subject in subjects:
+
         subject_rows += f"""
         <tr>
-            <td>{subject["name"]}</td>
 
             <td>
-                <a href="/admin/edit-subject/{subject["id"]}">
+                <span class="subject-name">
+                    📚 {subject["name"]}
+                </span>
+            </td>
+
+            <td>
+
+                <a
+                    class="edit-btn"
+                    href="/admin/edit-subject/{subject["id"]}"
+                >
                     ✏️ Edit
                 </a>
 
-                <form method="POST"
-                      action="/admin/delete-subject/{subject["id"]}"
-                      style="display:inline;"
-                      onsubmit="return confirm('Delete this subject?');">
+                <form
+                    method="POST"
+                    action="/admin/delete-subject/{subject["id"]}"
+                    class="inline-form"
+                    onsubmit="return confirm('Delete this subject?');"
+                >
 
-                    <button type="submit"
-                            style="background:#dc2626;color:white;border:0;padding:7px 10px;border-radius:6px;">
+                    <button
+                        type="submit"
+                        class="delete-btn"
+                    >
                         🗑️ Delete
                     </button>
 
                 </form>
+
             </td>
+
         </tr>
         """
 
     if not subject_rows:
+
         subject_rows = """
         <tr>
-            <td colspan="2">No subjects found.</td>
-        </tr>
-        """
-
-    rows = ""
-
-    for user in users:
-        rows += f"""
-        <tr>
-            <td>{user["name"]}</td>
-            <td>{user["email"]}</td>
-            <td>{user["role"]}</td>
-            <td>
-                <form method="POST"
-                      action="/admin/delete-user"
-                      onsubmit="return confirm('Delete this user?');">
-                    <input type="hidden"
-                           name="user_id"
-                           value="{user["id"]}">
-                    <button type="submit">🗑️ Delete</button>
-                </form>
+            <td colspan="2" class="empty">
+                📚 No subjects found.
             </td>
         </tr>
         """
 
-    if not rows:
-        rows = """
+    # =========================
+    # USER ROWS
+    # =========================
+    rows = ""
+
+    for user in users:
+
+        role = user["role"]
+
+        if role == "developer":
+            role_class = "developer-role"
+            role_icon = "👨‍💻"
+        elif role == "teacher":
+            role_class = "teacher-role"
+            role_icon = "👨‍🏫"
+        else:
+            role_class = "student-role"
+            role_icon = "🎓"
+
+        rows += f"""
         <tr>
-            <td colspan="4">No users found.</td>
+
+            <td>
+                <div class="user-name">
+                    {role_icon} {user["name"]}
+                </div>
+            </td>
+
+            <td class="email">
+                {user["email"]}
+            </td>
+
+            <td>
+
+                <span class="role-badge {role_class}">
+                    {role}
+                </span>
+
+            </td>
+
+            <td>
+
+                <form
+                    method="POST"
+                    action="/admin/delete-user"
+                    class="inline-form"
+                    onsubmit="return confirm('Delete this user?');"
+                >
+
+                    <input
+                        type="hidden"
+                        name="user_id"
+                        value="{user["id"]}"
+                    >
+
+                    <button
+                        type="submit"
+                        class="delete-btn"
+                    >
+                        🗑️ Delete
+                    </button>
+
+                </form>
+
+            </td>
+
         </tr>
         """
 
-    return f"""
-    <h1>👨‍💻 Developer Dashboard</h1>
+    if not rows:
 
-    <p>Welcome, {session["name"]}</p>
-
-    <hr>
-
-    <h2>➕ Add Student / Teacher</h2>
-
-    <form method="POST" action="/admin/add-user">
-        <input name="name" placeholder="Name" required><br><br>
-
-        <input name="email"
-               type="email"
-               placeholder="Email"
-               required><br><br>
-
-        <input name="password"
-               type="password"
-               placeholder="Password"
-               required><br><br>
-
-        <select name="role" required>
-            <option value="student">🎓 Student</option>
-            <option value="teacher">👨‍🏫 Teacher</option>
-        </select>
-
-        <br><br>
-
-        <button type="submit">➕ Add User</button>
-    </form>
-
-    <hr>
-
-    <h2>👥 Users</h2>
-
-    <table border="1" cellpadding="10">
+        rows = """
         <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Action</th>
+            <td colspan="4" class="empty">
+                👥 No users found.
+            </td>
         </tr>
+        """
 
-        {rows}
-    </table>
-    <hr>
+    # =========================
+    # COUNTS
+    # =========================
+    student_count = sum(
+        1 for user in users
+        if user["role"] == "student"
+    )
 
-<h2>📚 Manage Subjects</h2>
+    teacher_count = sum(
+        1 for user in users
+        if user["role"] == "teacher"
+    )
 
-<form method="POST" action="/admin/add-subject">
+    developer_count = sum(
+        1 for user in users
+        if user["role"] == "developer"
+    )
 
-    <input
-        type="text"
-        name="name"
-        placeholder="Enter Subject Name"
-        required
+    # =========================
+    # FUTURISTIC ADMIN UI
+    # =========================
+    return f"""
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <title>Developer Dashboard | College Test System</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
     >
 
-    <button type="submit">
-        ➕ Add Subject
-    </button>
+    <style>
 
-</form>
+        * {{
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }}
 
-<br>
+        body {{
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Arial,
+                sans-serif;
 
-<table border="1" cellpadding="10">
+            min-height: 100vh;
 
-    <tr>
-        <th>Subject</th>
-        <th>Action</th>
-    </tr>
+            color: #e8f4ff;
 
-    {subject_rows}
+            background:
+                radial-gradient(
+                    circle at 10% 10%,
+                    rgba(0, 229, 255, 0.14),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 90% 10%,
+                    rgba(139, 92, 246, 0.16),
+                    transparent 32%
+                ),
+                radial-gradient(
+                    circle at 50% 100%,
+                    rgba(0, 140, 255, 0.10),
+                    transparent 35%
+                ),
+                #050914;
 
-</table>
-    <br>
+            overflow-x: hidden;
+        }}
 
-    <a href="/logout">Logout</a>
-    """
+        body::before {{
+            content: "";
+
+            position: fixed;
+
+            inset: 0;
+
+            pointer-events: none;
+
+            background-image:
+                linear-gradient(
+                    rgba(255,255,255,0.025) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,0.025) 1px,
+                    transparent 1px
+                );
+
+            background-size: 40px 40px;
+
+            mask-image:
+                linear-gradient(
+                    to bottom,
+                    black,
+                    transparent
+                );
+        }}
+
+        .container {{
+            width: 94%;
+            max-width: 1200px;
+
+            margin: 25px auto;
+
+            position: relative;
+            z-index: 1;
+        }}
+
+        /* HEADER */
+
+        .header {{
+            display: flex;
+
+            justify-content: space-between;
+            align-items: center;
+
+            gap: 20px;
+
+            padding: 23px;
+
+            margin-bottom: 20px;
+
+            border-radius: 22px;
+
+            border:
+                1px solid rgba(255,255,255,0.09);
+
+            background:
+                rgba(8,18,35,0.72);
+
+            backdrop-filter: blur(18px);
+
+            box-shadow:
+                0 0 40px rgba(0,200,255,0.07);
+        }}
+
+        .brand {{
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }}
+
+        .logo {{
+            width: 56px;
+            height: 56px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 17px;
+
+            font-size: 27px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(0,229,255,0.16),
+                    rgba(139,92,246,0.18)
+                );
+
+            border:
+                1px solid rgba(0,229,255,0.30);
+
+            box-shadow:
+                0 0 25px rgba(0,229,255,0.15);
+        }}
+
+        .title {{
+            font-size: 25px;
+            font-weight: 800;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #ffffff,
+                    #6eeaff
+                );
+
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }}
+
+        .subtitle {{
+            margin-top: 5px;
+
+            color: #849bb2;
+
+            font-size: 13px;
+        }}
+
+        .logout {{
+            text-decoration: none;
+
+            color: #ffabb4;
+
+            padding: 10px 15px;
+
+            border-radius: 11px;
+
+            background:
+                rgba(255,60,80,0.08);
+
+            border:
+                1px solid rgba(255,70,90,0.25);
+
+            transition: 0.25s;
+        }}
+
+        .logout:hover {{
+            background:
+                rgba(255,60,80,0.18);
+        }}
+
+        /* WELCOME */
+
+        .welcome {{
+            color: #94a9bf;
+
+            margin-bottom: 20px;
+        }}
+
+        .welcome strong {{
+            color: #68e8ff;
+        }}
+
+        /* STATS */
+
+        .stats {{
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 14px;
+
+            margin-bottom: 22px;
+        }}
+
+        .stat {{
+            padding: 20px;
+
+            border-radius: 18px;
+
+            border:
+                1px solid rgba(255,255,255,0.08);
+
+            background:
+                rgba(8,18,35,0.70);
+
+            backdrop-filter: blur(15px);
+        }}
+
+        .stat-icon {{
+            font-size: 22px;
+            margin-bottom: 9px;
+        }}
+
+        .stat-number {{
+            font-size: 27px;
+
+            font-weight: 800;
+
+            color: #ffffff;
+        }}
+
+        .stat-label {{
+            margin-top: 4px;
+
+            color: #7f95ac;
+
+            font-size: 12px;
+        }}
+
+        /* CARDS */
+
+        .card {{
+            padding: 24px;
+
+            margin-bottom: 20px;
+
+            border-radius: 22px;
+
+            border:
+                1px solid rgba(255,255,255,0.08);
+
+            background:
+                rgba(8,18,35,0.72);
+
+            backdrop-filter: blur(18px);
+
+            box-shadow:
+                0 15px 45px rgba(0,0,0,0.18);
+        }}
+
+        .section-title {{
+            font-size: 20px;
+
+            color: #ffffff;
+
+            margin-bottom: 5px;
+        }}
+
+        .section-description {{
+            color: #7f96ad;
+
+            font-size: 13px;
+
+            margin-bottom: 20px;
+        }}
+
+        /* ADD USER */
+
+        .form-grid {{
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 14px;
+        }}
+
+        .field {{
+            display: flex;
+            flex-direction: column;
+        }}
+
+        .field label {{
+            color: #9ab0c6;
+
+            font-size: 13px;
+
+            margin-bottom: 7px;
+        }}
+
+        input,
+        select {{
+            width: 100%;
+
+            padding: 13px;
+
+            border-radius: 11px;
+
+            outline: none;
+
+            color: #eaf7ff;
+
+            background:
+                rgba(2,8,20,0.75);
+
+            border:
+                1px solid rgba(255,255,255,0.10);
+
+            transition: 0.25s;
+        }}
+
+        input:focus,
+        select:focus {{
+            border-color: #24ddff;
+
+            box-shadow:
+                0 0 0 3px rgba(36,221,255,0.07);
+        }}
+
+        input::placeholder {{
+            color: #596e83;
+        }}
+
+        select option {{
+            background: #081224;
+            color: white;
+        }}
+
+        .primary-btn {{
+            width: 100%;
+
+            margin-top: 16px;
+
+            padding: 14px;
+
+            border: none;
+
+            border-radius: 12px;
+
+            color: white;
+
+            font-size: 15px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            background:
+                linear-gradient(
+                    100deg,
+                    #008cff,
+                    #00d9ff,
+                    #7c3aed
+                );
+
+            box-shadow:
+                0 0 25px rgba(0,180,255,0.16);
+
+            transition: 0.25s;
+        }}
+
+        .primary-btn:hover {{
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 0 35px rgba(0,200,255,0.27);
+        }}
+
+        /* TABLE */
+
+        .table-wrapper {{
+            width: 100%;
+
+            overflow-x: auto;
+
+            border-radius: 14px;
+
+            border:
+                1px solid rgba(255,255,255,0.07);
+        }}
+
+        table {{
+            width: 100%;
+
+            min-width: 650px;
+
+            border-collapse: collapse;
+        }}
+
+        th {{
+            padding: 14px;
+
+            text-align: left;
+
+            color: #7992ab;
+
+            font-size: 11px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.7px;
+
+            background:
+                rgba(0,229,255,0.045);
+
+            border-bottom:
+                1px solid rgba(255,255,255,0.08);
+        }}
+
+        td {{
+            padding: 14px;
+
+            color: #c7d6e6;
+
+            font-size: 13px;
+
+            border-bottom:
+                1px solid rgba(255,255,255,0.05);
+        }}
+
+        tr:hover td {{
+            background:
+                rgba(0,229,255,0.03);
+        }}
+
+        .user-name {{
+            color: #e8f6ff;
+
+            font-weight: 600;
+        }}
+
+        .email {{
+            color: #8da5bb;
+        }}
+
+        .role-badge {{
+            display: inline-block;
+
+            padding: 5px 9px;
+
+            border-radius: 8px;
+
+            font-size: 11px;
+
+            font-weight: 700;
+
+            text-transform: uppercase;
+        }}
+
+        .student-role {{
+            color: #7de8ff;
+
+            background:
+                rgba(0,190,255,0.09);
+
+            border:
+                1px solid rgba(0,190,255,0.15);
+        }}
+
+        .teacher-role {{
+            color: #bca4ff;
+
+            background:
+                rgba(139,92,246,0.10);
+
+            border:
+                1px solid rgba(139,92,246,0.16);
+        }}
+
+        .developer-role {{
+            color: #7affbd;
+
+            background:
+                rgba(40,220,130,0.09);
+
+            border:
+                1px solid rgba(40,220,130,0.15);
+        }}
+
+        .subject-name {{
+            color: #dceeff;
+
+            font-weight: 600;
+        }}
+
+        .edit-btn {{
+            display: inline-block;
+
+            padding: 7px 10px;
+
+            margin-right: 4px;
+
+            border-radius: 8px;
+
+            color: #83eaff;
+
+            text-decoration: none;
+
+            background:
+                rgba(0,180,255,0.08);
+
+            border:
+                1px solid rgba(0,180,255,0.16);
+        }}
+
+        .edit-btn:hover {{
+            background:
+                rgba(0,180,255,0.17);
+        }}
+
+        .inline-form {{
+            display: inline;
+        }}
+
+        .delete-btn {{
+            padding: 7px 10px;
+
+            border-radius: 8px;
+
+            border:
+                1px solid rgba(255,70,90,0.18);
+
+            color: #ff9eaa;
+
+            background:
+                rgba(255,60,80,0.08);
+
+            cursor: pointer;
+        }}
+
+        .delete-btn:hover {{
+            background:
+                rgba(255,60,80,0.18);
+        }}
+
+        .empty {{
+            text-align: center;
+
+            padding: 35px !important;
+
+            color: #657b91;
+        }}
+
+        /* STATUS */
+
+        .status {{
+            display: flex;
+
+            justify-content: center;
+            align-items: center;
+
+            gap: 7px;
+
+            color: #657d94;
+
+            font-size: 12px;
+
+            margin: 18px 0;
+        }}
+
+        .status-dot {{
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: #35f29a;
+
+            box-shadow:
+                0 0 10px #35f29a;
+        }}
+
+        /* MOBILE */
+
+        @media (max-width: 750px) {{
+
+            .container {{
+                width: 94%;
+
+                margin: 15px auto;
+            }}
+
+            .header {{
+                padding: 18px;
+
+                align-items: flex-start;
+            }}
+
+            .title {{
+                font-size: 20px;
+            }}
+
+            .logo {{
+                width: 45px;
+                height: 45px;
+
+                font-size: 22px;
+            }}
+
+            .logout {{
+                font-size: 12px;
+
+                padding: 8px 10px;
+            }}
+
+            .stats {{
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }}
+
+            .form-grid {{
+                grid-template-columns: 1fr;
+            }}
+
+            .card {{
+                padding: 18px;
+            }}
+
+        }}
+
+        @media (max-width: 430px) {{
+
+            .stats {{
+                grid-template-columns: 1fr;
+            }}
+
+        }}
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+
+    <div class="header">
+
+        <div class="brand">
+
+            <div class="logo">
+                👨‍💻
+            </div>
+
+            <div>
+
+                <div class="title">
+                    Developer Console
+                </div>
+
+                <div class="subtitle">
+                    College Test & Exam Management System
+                </div>
+
+            </div>
+
+        </div>
+
+        <a
+            href="/logout"
+            class="logout"
+        >
+            🚪 Logout
+        </a>
+
+    </div>
+
+
+    <!-- WELCOME -->
+
+    <div class="welcome">
+
+        Welcome back,
+        <strong>{session["name"]}</strong>
+        👋
+
+    </div>
+
+
+    <!-- STATS -->
+
+    <div class="stats">
+
+        <div class="stat">
+
+            <div class="stat-icon">
+                👥
+            </div>
+
+            <div class="stat-number">
+                {len(users)}
+            </div>
+
+            <div class="stat-label">
+                Total Users
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-icon">
+                🎓
+            </div>
+
+            <div class="stat-number">
+                {student_count}
+            </div>
+
+            <div class="stat-label">
+                Students
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-icon">
+                👨‍🏫
+            </div>
+
+            <div class="stat-number">
+                {teacher_count}
+            </div>
+
+            <div class="stat-label">
+                Teachers
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-icon">
+                📚
+            </div>
+
+            <div class="stat-number">
+                {len(subjects)}
+            </div>
+
+            <div class="stat-label">
+                Subjects
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ADD USER -->
+
+    <div class="card">
+
+        <div class="section-title">
+            ➕ Add Student / Teacher
+        </div>
+
+        <div class="section-description">
+            Create a new account for the college system.
+        </div>
+
+
+        <form
+            method="POST"
+            action="/admin/add-user"
+        >
+
+            <div class="form-grid">
+
+
+                <div class="field">
+
+                    <label>
+                        👤 Name
+                    </label>
+
+                    <input
+                        name="name"
+                        placeholder="Enter full name"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        📧 Email
+                    </label>
+
+                    <input
+                        name="email"
+                        type="email"
+                        placeholder="Enter email address"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        🔐 Password
+                    </label>
+
+                    <input
+                        name="password"
+                        type="password"
+            placeholder="Create password"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        🎯 Account Role
+                    </label>
+
+                    <select
+                        name="role"
+                        required
+                    >
+
+                        <option value="student">
+                            🎓 Student
+                        </option>
+
+                        <option value="teacher">
+                            👨‍🏫 Teacher
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="primary-btn"
+            >
+                ⚡ Create User Account
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- USERS -->
+
+    <div class="card">
+
+        <div class="section-title">
+            👥 User Management
+        </div>
+
+        <div class="section-description">
+            View and manage registered system users.
+        </div>
+
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Name
+                        </th>
+
+                        <th>
+                            Email
+                        </th>
+
+                        <th>
+                            Role
+                        </th>
+
+                        <th>
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {rows}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- SUBJECTS -->
+
+    <div class="card">
+
+        <div class="section-title">
+            📚 Subject Management
+        </div>
+
+        <div class="section-description">
+            Add and manage subjects available in the system.
+        </div>
+
+
+        <form
+            method="POST"
+            action="/admin/add-subject"
+        >
+
+            <div class="field">
+
+                <label>
+                    📖 Subject Name
+                </label>
+
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="Enter Subject Name"
+                    required
+                >
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="primary-btn"
+            >
+                ➕ Add Subject
+            </button>
+
+        </form>
+
+
+        <br>
+
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Subject
+                        </th>
+
+                        <th>
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {subject_rows}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- SYSTEM STATUS -->
+
+    <div class="status">
+
+        <span class="status-dot"></span>
+
+        Developer Console • System Online
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
+"""
 @app.route("/admin/add-user", methods=["POST"])
 def admin_add_user():
     if "user_id" not in session:

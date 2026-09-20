@@ -1190,15 +1190,21 @@ def student():
         for subject in subjects
     }
 
-    rows = ""
-
     total_obtained = 0
     total_marks = 0
+    test_count = len(records)
+
+    rows = ""
+
+    # Subject performance data
+    subject_stats = {}
 
     for record in records:
 
+        subject_id = str(record["subject_id"])
+
         subject_name = subject_names.get(
-            str(record["subject_id"]),
+            subject_id,
             "Unknown Subject"
         )
 
@@ -1211,27 +1217,81 @@ def student():
         percentage = 0
 
         if maximum:
-            percentage = round((marks / maximum) * 100, 2)
+            percentage = round(
+                (marks / maximum) * 100,
+                2
+            )
+
+        # Subject statistics
+        if subject_name not in subject_stats:
+            subject_stats[subject_name] = {
+                "obtained": 0,
+                "total": 0
+            }
+
+        subject_stats[subject_name]["obtained"] += marks
+        subject_stats[subject_name]["total"] += maximum
 
         rows += f"""
-        <tr>
-            <td>{subject_name}</td>
-            <td>{record["test_name"]}</td>
-            <td>{marks}/{maximum}</td>
-            <td>{percentage}%</td>
-            <td>{record["test_date"]}</td>
-        </tr>
+        <div class="test-card">
+
+            <div class="test-main">
+
+                <div>
+                    <div class="test-name">
+                        {record["test_name"]}
+                    </div>
+
+                    <div class="test-subject">
+                        📚 {subject_name}
+                    </div>
+                </div>
+
+                <div class="test-score">
+                    {percentage}%
+                </div>
+
+            </div>
+
+            <div class="test-info">
+
+                <span>
+                    📊 {marks}/{maximum}
+                </span>
+
+                <span>
+                    📅 {record["test_date"]}
+                </span>
+
+            </div>
+
+            <div class="mini-progress">
+                <div
+                    class="mini-progress-fill"
+                    style="width:{min(percentage, 100)}%;">
+                </div>
+            </div>
+
+        </div>
         """
 
     if not rows:
         rows = """
-        <tr>
-            <td colspan="5">
-                No test records found.
-            </td>
-        </tr>
+        <div class="empty-state">
+
+            <div class="empty-icon">📭</div>
+
+            <h3>No Test Records Yet</h3>
+
+            <p>
+                Your test results will appear here
+                when your teacher adds them.
+            </p>
+
+        </div>
         """
 
+    # Overall percentage
     overall_percentage = 0
 
     if total_marks > 0:
@@ -1240,134 +1300,1031 @@ def student():
             2
         )
 
+    # Subject cards
+    subject_cards = ""
+
+    for subject_name, data in subject_stats.items():
+
+        subject_percentage = 0
+
+        if data["total"] > 0:
+            subject_percentage = round(
+                (data["obtained"] / data["total"]) * 100,
+                1
+            )
+
+        subject_cards += f"""
+        <div class="subject-card">
+
+            <div class="subject-top">
+
+                <div class="subject-icon">
+                    📚
+                </div>
+
+                <div>
+                    <div class="subject-name">
+                        {subject_name}
+                    </div>
+
+                    <div class="subject-marks">
+                        {data["obtained"]}/{data["total"]} marks
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="subject-percent">
+                {subject_percentage}%
+            </div>
+
+            <div class="progress">
+                <div
+                    class="progress-fill"
+                    style="width:{min(subject_percentage, 100)}%;">
+                </div>
+            </div>
+
+        </div>
+        """
+
+    if not subject_cards:
+        subject_cards = """
+        <div class="empty-subject">
+            No subject performance available yet.
+        </div>
+        """
+
     return f"""
-    <!DOCTYPE html>
-    <html>
+<!DOCTYPE html>
+<html lang="en">
 
-    <head>
+<head>
 
-        <title>Student Dashboard</title>
+    <meta charset="UTF-8">
 
-        <meta name="viewport"
-              content="width=device-width, initial-scale=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-        <style>
+    <title>Student Dashboard | College Test Record</title>
 
-            body {{
-                font-family: Arial;
-                background: #f2f5f9;
-                padding: 15px;
+    <style>
+
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+
+        body {{
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            min-height: 100vh;
+
+            color: white;
+
+            background:
+                radial-gradient(
+                    circle at 10% 10%,
+                    #123b62 0%,
+                    transparent 32%
+                ),
+
+                radial-gradient(
+                    circle at 90% 80%,
+                    #32145c 0%,
+                    transparent 35%
+                ),
+
+                #050914;
+
+            overflow-x: hidden;
+        }}
+
+        body::before {{
+
+            content: "";
+
+            position: fixed;
+
+            inset: 0;
+
+            background-image:
+
+                linear-gradient(
+                    rgba(0, 200, 255, 0.035) 1px,
+                    transparent 1px
+                ),
+
+                linear-gradient(
+                    90deg,
+                    rgba(0, 200, 255, 0.035) 1px,
+                    transparent 1px
+                );
+
+            background-size: 45px 45px;
+
+            pointer-events: none;
+
+            z-index: 0;
+        }}
+
+        .container {{
+
+            position: relative;
+
+            z-index: 1;
+
+            width: 100%;
+
+            max-width: 1150px;
+
+            margin: auto;
+
+            padding: 22px;
+        }}
+
+        /* HEADER */
+
+        .header {{
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            padding: 18px 22px;
+
+            margin-bottom: 25px;
+
+            border-radius: 20px;
+
+            background:
+                rgba(255,255,255,0.07);
+
+            border:
+                1px solid rgba(255,255,255,0.12);
+
+            backdrop-filter: blur(18px);
+
+            box-shadow:
+                0 10px 35px rgba(0,0,0,0.25);
+        }}
+
+        .brand {{
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+        }}
+
+        .brand-icon {{
+
+            width: 48px;
+            height: 48px;
+
+            border-radius: 14px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 24px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #00c8ff,
+                    #6366f1
+                );
+
+            box-shadow:
+                0 0 25px
+                rgba(0,200,255,0.25);
+        }}
+
+        .brand-title {{
+
+            font-size: 18px;
+
+            font-weight: bold;
+        }}
+
+        .brand-subtitle {{
+
+            font-size: 11px;
+
+            color: #8293aa;
+
+            margin-top: 3px;
+        }}
+
+        .logout {{
+
+            text-decoration: none;
+
+            color: #d8e5f2;
+
+            padding: 10px 15px;
+
+            border-radius: 10px;
+
+            border:
+                1px solid rgba(255,255,255,0.12);
+
+            background:
+                rgba(255,255,255,0.05);
+
+            transition: 0.3s;
+        }}
+
+        .logout:hover {{
+
+            background:
+                rgba(255,70,100,0.15);
+
+            border-color:
+                rgba(255,100,120,0.4);
+        }}
+
+        /* WELCOME */
+
+        .welcome {{
+
+            margin: 25px 0;
+        }}
+
+        .welcome-small {{
+
+            color: #7e91a9;
+
+            font-size: 13px;
+
+            margin-bottom: 7px;
+        }}
+
+        .welcome h1 {{
+
+            font-size: 32px;
+
+            margin-bottom: 8px;
+        }}
+
+        .welcome p {{
+
+            color: #91a2b7;
+
+            font-size: 14px;
+        }}
+
+        /* STAT CARDS */
+
+        .stats {{
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 16px;
+
+            margin-bottom: 25px;
+        }}
+
+        .stat-card {{
+
+            padding: 22px;
+
+            border-radius: 18px;
+
+            background:
+                rgba(255,255,255,0.065);
+
+            border:
+                1px solid rgba(255,255,255,0.11);
+
+            backdrop-filter: blur(15px);
+
+            transition: 0.3s;
+        }}
+
+        .stat-card:hover {{
+
+            transform: translateY(-4px);
+
+            border-color:
+                rgba(0,210,255,0.35);
+
+            box-shadow:
+                0 10px 35px
+                rgba(0,200,255,0.08);
+        }}
+
+        .stat-icon {{
+
+            font-size: 22px;
+
+            margin-bottom: 12px;
+        }}
+
+        .stat-label {{
+
+            color: #8798ad;
+
+            font-size: 12px;
+
+            margin-bottom: 6px;
+        }}
+
+        .stat-value {{
+
+            font-size: 27px;
+
+            font-weight: bold;
+        }}
+
+        .stat-value span {{
+
+            font-size: 13px;
+
+            color: #7e90a7;
+
+            font-weight: normal;
+        }}
+
+        /* PERFORMANCE */
+
+        .section {{
+
+            margin-top: 25px;
+        }}
+
+        .section-title {{
+
+            font-size: 19px;
+
+            margin-bottom: 14px;
+        }}
+
+        .performance-card {{
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 28px;
+
+            padding: 25px;
+
+            border-radius: 20px;
+
+            background:
+                rgba(255,255,255,0.065);
+
+            border:
+                1px solid rgba(255,255,255,0.11);
+
+            backdrop-filter: blur(15px);
+        }}
+
+        .percentage-circle {{
+
+            min-width: 130px;
+
+            height: 130px;
+
+            border-radius: 50%;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background:
+                radial-gradient(
+                    circle,
+                    #101a2b 55%,
+                    transparent 56%
+                );
+
+            border:
+                5px solid #00c8ff;
+
+            box-shadow:
+                0 0 25px
+                rgba(0,200,255,0.25);
+        }}
+
+        .percentage-number {{
+
+            font-size: 25px;
+
+            font-weight: bold;
+        }}
+
+        .percentage-label {{
+
+            color: #7f92a9;
+
+            font-size: 11px;
+
+            margin-top: 4px;
+        }}
+
+        .performance-info h3 {{
+
+            font-size: 20px;
+
+            margin-bottom: 8px;
+        }}
+
+        .performance-info p {{
+
+            color: #8fa0b5;
+
+            font-size: 13px;
+
+            line-height: 1.6;
+        }}
+
+        /* SUBJECTS */
+
+        .subjects {{
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 15px;
+        }}
+
+        .subject-card {{
+
+            padding: 18px;
+
+            border-radius: 17px;
+
+            background:
+                rgba(255,255,255,0.055);
+
+            border:
+                1px solid rgba(255,255,255,0.10);
+
+            transition: 0.3s;
+        }}
+
+        .subject-card:hover {{
+
+            transform: translateY(-3px);
+
+            border-color:
+                rgba(99,102,241,0.4);
+        }}
+
+        .subject-top {{
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+        }}
+
+        .subject-icon {{
+
+            width: 42px;
+            height: 42px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 12px;
+
+            background:
+                rgba(0,200,255,0.1);
+
+            font-size: 20px;
+        }}
+
+        .subject-name {{
+
+            font-size: 14px;
+
+            font-weight: bold;
+        }}
+
+        .subject-marks {{
+
+            color: #778ba2;
+
+            font-size: 11px;
+
+            margin-top: 4px;
+        }}
+
+        .subject-percent {{
+
+            font-size: 24px;
+
+            font-weight: bold;
+
+            margin: 18px 0 10px;
+        }}
+
+        .progress {{
+
+            height: 6px;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255,255,255,0.08);
+
+            overflow: hidden;
+        }}
+
+        .progress-fill {{
+
+            height: 100%;
+
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #00c8ff,
+                    #6366f1
+                );
+
+            box-shadow:
+                0 0 10px
+                rgba(0,200,255,0.4);
+        }}
+
+        /* TEST RECORDS */
+
+        .test-list {{
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 12px;
+        }}
+
+        .test-card {{
+
+            padding: 17px;
+
+            border-radius: 15px;
+
+            background:
+                rgba(255,255,255,0.05);
+
+            border:
+                1px solid rgba(255,255,255,0.09);
+
+            transition: 0.3s;
+        }}
+
+        .test-card:hover {{
+
+            background:
+                rgba(255,255,255,0.075);
+
+            transform: translateX(3px);
+        }}
+
+        .test-main {{
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+        }}
+
+        .test-name {{
+
+            font-weight: bold;
+
+            font-size: 14px;
+        }}
+
+        .test-subject {{
+
+            color: #7d90a7;
+
+            font-size: 11px;
+
+            margin-top: 5px;
+        }}
+
+        .test-score {{
+
+            font-size: 20px;
+
+            font-weight: bold;
+
+            color: #00d9ff;
+        }}
+
+        .test-info {{
+
+            display: flex;
+
+            gap: 18px;
+
+            margin-top: 12px;
+
+            color: #75889f;
+
+            font-size: 11px;
+        }}
+
+        .mini-progress {{
+
+            height: 4px;
+
+            margin-top: 12px;
+
+            background:
+                rgba(255,255,255,0.07);
+
+            border-radius: 10px;
+
+            overflow: hidden;
+        }}
+
+        .mini-progress-fill {{
+
+            height: 100%;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #00c8ff,
+                    #6366f1
+                );
+
+            border-radius: 10px;
+        }}
+
+        /* EMPTY */
+
+        .empty-state {{
+
+            text-align: center;
+
+            padding: 40px 20px;
+
+            border-radius: 18px;
+
+            background:
+                rgba(255,255,255,0.04);
+
+            border:
+                1px dashed
+                rgba(255,255,255,0.15);
+        }}
+
+        .empty-icon {{
+
+            font-size: 35px;
+
+            margin-bottom: 12px;
+        }}
+
+        .empty-state h3 {{
+
+            margin-bottom: 7px;
+        }}
+
+        .empty-state p {{
+
+            color: #778ba2;
+
+            font-size: 13px;
+        }}
+
+        .empty-subject {{
+
+            padding: 20px;
+
+            color: #778ba2;
+        }}
+
+        /* FOOTER */
+
+        .footer {{
+
+            text-align: center;
+
+            color: #566a82;
+
+            font-size: 11px;
+
+            padding: 30px 0 10px;
+        }}
+
+        /* MOBILE */
+
+        @media(max-width: 750px) {{
+
+            .container {{
+                padding: 14px;
             }}
 
-            .box {{
-                max-width: 1000px;
-                margin: auto;
-                background: white;
-                padding: 20px;
-                border-radius: 15px;
+            .header {{
+                padding: 14px;
             }}
 
-            .card {{
-                background: #f1f5f9;
-                padding: 15px;
-                margin: 10px 0;
-                border-radius: 10px;
+            .brand-title {{
+                font-size: 15px;
             }}
 
-            table {{
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 20px;
+            .brand-subtitle {{
+                display: none;
             }}
 
-            th, td {{
-                border: 1px solid #ccc;
-                padding: 10px;
-                text-align: left;
+            .welcome h1 {{
+                font-size: 25px;
             }}
 
-            th {{
-                background: #2563eb;
-                color: white;
+            .stats {{
+                grid-template-columns: 1fr;
             }}
 
-            @media(max-width:600px) {{
-
-                table {{
-                    font-size: 13px;
-                }}
-
-                th, td {{
-                    padding: 7px;
-                }}
-
+            .subjects {{
+                grid-template-columns: 1fr;
             }}
 
-        </style>
+            .performance-card {{
+                flex-direction: column;
 
-    </head>
+                text-align: center;
+            }}
 
-    <body>
+            .percentage-circle {{
+                min-width: 115px;
+                height: 115px;
+            }}
 
-    <div class="box">
+            .test-main {{
+                align-items: flex-start;
+            }}
 
-        <h1>🎓 Student Dashboard</h1>
+            .test-score {{
+                font-size: 18px;
+            }}
 
-        <h3>
-            Welcome, {session["name"]}
-        </h3>
+            .logout {{
+                padding: 8px 11px;
 
-        <p>
-            📧 {session["email"]}
-        </p>
+                font-size: 12px;
+            }}
+        }}
 
-        <hr>
+    </style>
 
-        <div class="card">
+</head>
 
-            <h2>📊 My Result</h2>
+<body>
 
-            <p>
-                <b>Total Marks:</b>
-                {total_obtained}/{total_marks}
-            </p>
+<div class="container">
 
-            <p>
-                <b>Overall Percentage:</b>
-                {overall_percentage}%
-            </p>
+    <!-- HEADER -->
+
+    <header class="header">
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                🎓
+            </div>
+
+            <div>
+
+                <div class="brand-title">
+                    College Test Record
+                </div>
+
+                <div class="brand-subtitle">
+                    Smart Academic Management System
+                </div>
+
+            </div>
 
         </div>
 
-        <hr>
+        <a
+            href="/logout"
+            class="logout">
 
-        <h2>📚 My Test Records</h2>
+            🚪 Logout
 
-        <table>
+        </a>
 
-            <tr>
-                <th>Subject</th>
-                <th>Test</th>
-                <th>Marks</th>
-                <th>Percentage</th>
-                <th>Date</th>
-            </tr>
+    </header>
+
+
+    <!-- WELCOME -->
+
+    <section class="welcome">
+
+        <div class="welcome-small">
+            STUDENT PORTAL
+        </div>
+
+        <h1>
+            Welcome, {session["name"]} 👋
+        </h1>
+
+        <p>
+            Track your academic performance and test results.
+        </p>
+
+    </section>
+
+
+    <!-- STAT CARDS -->
+
+    <section class="stats">
+
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                📝
+            </div>
+
+            <div class="stat-label">
+                TOTAL TESTS
+            </div>
+
+            <div class="stat-value">
+                {test_count}
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                📊
+            </div>
+
+            <div class="stat-label">
+                TOTAL MARKS
+            </div>
+
+            <div class="stat-value">
+
+                {total_obtained}
+
+                <span>
+                    / {total_marks}
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                🎯
+            </div>
+
+            <div class="stat-label">
+                OVERALL PERFORMANCE
+            </div>
+
+            <div class="stat-value">
+                {overall_percentage}%
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- PERFORMANCE -->
+
+    <section class="section">
+
+        <div class="section-title">
+            📈 Performance Overview
+        </div>
+
+        <div class="performance-card">
+
+            <div class="percentage-circle">
+
+                <div class="percentage-number">
+                    {overall_percentage}%
+                </div>
+
+                <div class="percentage-label">
+                    OVERALL
+                </div>
+
+            </div>
+
+            <div class="performance-info">
+
+                <h3>
+                    Your Academic Progress
+                </h3>
+
+                <p>
+                    You have scored
+                    <b>{total_obtained}</b>
+                    marks out of
+                    <b>{total_marks}</b>
+                    across
+                    <b>{test_count}</b>
+                    test(s).
+                </p>
+
+                <p style="margin-top:8px;">
+                    Keep tracking your performance
+                    and continue improving.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- SUBJECT PERFORMANCE -->
+
+    <section class="section">
+
+        <div class="section-title">
+            📚 Subject Performance
+        </div>
+
+        <div class="subjects">
+
+            {subject_cards}
+
+        </div>
+
+    </section>
+
+
+    <!-- TEST RECORDS -->
+
+    <section class="section">
+
+        <div class="section-title">
+            📝 Recent Test Records
+        </div>
+
+        <div class="test-list">
 
             {rows}
 
-        </table>
+        </div>
 
-        <br>
+    </section>
 
-        <a href="/logout">
-            🚪 Logout
-        </a>
+
+    <div class="footer">
+
+        College Test & Exam Record Management System
+
+        <br><br>
+
+        Secure • Smart • Connected
 
     </div>
 
-    </body>
+</div>
 
-    </html>
+</body>
+
+</html>
     """
 
 

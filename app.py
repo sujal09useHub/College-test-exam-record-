@@ -2822,12 +2822,257 @@ def teacher_add_record():
         return "Could not add test record: " + r.text, 400
 
     return """
-    <h2>✅ Test record added successfully!</h2>
+<!DOCTYPE html>
+<html>
 
-    <a href="/teacher">
-        ← Back to Teacher Dashboard
-    </a>
-    """
+<head>
+
+    <title>Test Added | College Test System</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 20px;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Arial,
+                sans-serif;
+
+            color: #eaf7ff;
+
+            background:
+                radial-gradient(
+                    circle at 20% 20%,
+                    rgba(0,229,255,0.14),
+                    transparent 32%
+                ),
+                radial-gradient(
+                    circle at 80% 20%,
+                    rgba(139,92,246,0.16),
+                    transparent 32%
+                ),
+                #050914;
+        }
+
+        body::before {
+            content: "";
+
+            position: fixed;
+
+            inset: 0;
+
+            pointer-events: none;
+
+            background-image:
+                linear-gradient(
+                    rgba(255,255,255,0.025) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,0.025) 1px,
+                    transparent 1px
+                );
+
+            background-size: 40px 40px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 480px;
+
+            padding: 40px 28px;
+
+            text-align: center;
+
+            border-radius: 25px;
+
+            border:
+                1px solid rgba(255,255,255,0.10);
+
+            background:
+                rgba(8,18,35,0.78);
+
+            backdrop-filter: blur(20px);
+
+            box-shadow:
+                0 20px 60px rgba(0,0,0,0.35),
+                0 0 40px rgba(0,200,255,0.08);
+
+            position: relative;
+            z-index: 1;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+
+            margin: 0 auto 22px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            font-size: 38px;
+
+            background:
+                rgba(40,220,130,0.10);
+
+            border:
+                1px solid rgba(40,220,130,0.30);
+
+            box-shadow:
+                0 0 35px rgba(40,220,130,0.16);
+        }
+
+        h1 {
+            font-size: 25px;
+
+            margin-bottom: 10px;
+
+            color: #ffffff;
+        }
+
+        .message {
+            color: #8fa7bd;
+
+            font-size: 14px;
+
+            line-height: 1.6;
+
+            margin-bottom: 28px;
+        }
+
+        .button {
+            display: inline-block;
+
+            width: 100%;
+
+            padding: 14px;
+
+            border-radius: 13px;
+
+            text-decoration: none;
+
+            color: white;
+
+            font-size: 15px;
+
+            font-weight: 700;
+
+            background:
+                linear-gradient(
+                    100deg,
+                    #008cff,
+                    #00d9ff,
+                    #7c3aed
+                );
+
+            box-shadow:
+                0 0 25px rgba(0,180,255,0.18);
+
+            transition: 0.25s;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 0 35px rgba(0,200,255,0.30);
+        }
+
+        .status {
+            display: flex;
+
+            justify-content: center;
+            align-items: center;
+
+            gap: 7px;
+
+            margin-top: 22px;
+
+            color: #637b91;
+
+            font-size: 12px;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: #35f29a;
+
+            box-shadow:
+                0 0 10px #35f29a;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="card">
+
+        <div class="success-icon">
+            ✓
+        </div>
+
+        <h1>
+            Test Record Added
+        </h1>
+
+        <div class="message">
+            The test record has been successfully
+            saved to the college examination system.
+        </div>
+
+        <a
+            href="/teacher"
+            class="button"
+        >
+            ← Back to Teacher Dashboard
+        </a>
+
+        <div class="status">
+
+            <span class="dot"></span>
+
+            Database Updated • System Online
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
+"""
 @app.route("/teacher/edit-record/<int:record_id>", methods=["GET", "POST"])
 def teacher_edit_record(record_id):
 
